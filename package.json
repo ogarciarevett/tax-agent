@@ -1,0 +1,31 @@
+{
+	"name": "tax-agent",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"description": "Local-first personal tax agent (Spain first) — opentui interview, on-device storage, daily bill scan, country-correct report.",
+	"engines": {
+		"node": ">=22"
+	},
+	"scripts": {
+		"dev": "tsx src/index.ts",
+		"typecheck": "tsc --noEmit",
+		"check": "biome check",
+		"test": "vitest run --coverage",
+		"test:watch": "vitest"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.2",
+		"@types/better-sqlite3": "^7.6.13",
+		"@types/node": "^22.10.0",
+		"@vitest/coverage-v8": "^4.1.9",
+		"tsx": "^4.22.4",
+		"typescript": "^6.0.3",
+		"vitest": "^4.1.9"
+	},
+	"dependencies": {
+		"@opentui/core": "^0.4.2",
+		"better-sqlite3": "^12.11.1",
+		"zod": "^4.4.3"
+	}
+}
