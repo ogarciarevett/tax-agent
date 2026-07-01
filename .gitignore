@@ -7,8 +7,19 @@
 .env.*
 !.env.example
 
-# The template machinery is dependency-free (POSIX shell + awk/sed) — no runtime, no deps dir.
-# /bootstrap appends your language's ignores (node_modules/, target/, __pycache__/, vendor/, …).
+# --- Node / TypeScript (added by /bootstrap) ---
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+.pnpm-store/
+
+# Local on-device data — tax documents, RAG/vector store, SQLite DB. NEVER commit (PII).
+data/
+*.sqlite
+*.sqlite-*
+*.db
 
 # Generated per-tool agent mirrors — single source of truth is .ai/; these are REGENERATED
 # from it by `sh scripts/sync-ai-docs.sh` (run automatically by `sh scripts/install.sh`).
