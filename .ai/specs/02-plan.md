@@ -14,7 +14,7 @@
 ## Task index
 | Task id | Title | Spec | Status |
 |---------|-------|------|--------|
-| A1 | opentui profile interview + local persistence | [`A1-spec.md`](./A1-spec.md) | 🔵 built — 4/5 AC ✅, live TUI unverified (no TTY here) |
+| A1 | opentui profile interview + local persistence | [`A1-spec.md`](./A1-spec.md) | ✅ shipped — 4/5 AC ✅ (100% cov, 3/3 review); AC#1 ⚠️ live TUI needs a terminal |
 <!-- Add A2, B1, … (local), or external ids ENG-421 / #123 with a link to the ticket in place
 of the local spec link. -->
 
