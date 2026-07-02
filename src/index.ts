@@ -1,48 +1,36 @@
-import { banner } from "./banner";
-import { runInterview } from "./interview/interview";
-import { openDb } from "./storage/db";
-import { loadProfile, saveProfile } from "./storage/profile-repo";
-import { OpenTuiPrompter } from "./tui/opentui-prompter";
+import { parseCliArgs, usage } from "./cli/args";
+import { runInterviewCommand } from "./cli/interview";
+import { runReportCommand } from "./cli/report";
+import { runScanCommand } from "./cli/scan";
 
-// CLI entry: load an existing profile (or none), run the opentui interview prefilled with it,
-// then persist locally. The interview needs a TTY, so we guard for non-interactive runs. On the
-// TTY path the banner/status live inside the TUI (opentui takes the alternate screen), so we only
-// print to the normal buffer on the non-interactive path and after the TUI has torn down.
+// CLI entry: a thin router. All behavior lives in one file per command under src/cli/ so
+// parallel tasks never edit this file (frozen after B0).
 async function main(): Promise<void> {
-	const db = openDb();
-	const existing = loadProfile(db);
-
-	if (!process.stdin.isTTY) {
-		console.log(banner());
-		console.log(
-			existing
-				? `Loaded your profile (${existing.country}, tax year ${existing.taxYear}).`
-				: "No profile yet.",
-		);
-		console.log(
-			"The interview needs an interactive terminal. Run `pnpm dev` in your terminal.",
-		);
-		db.close();
-		return;
-	}
-
-	const prompter = new OpenTuiPrompter();
-	let saved = false;
-	try {
-		const profile = await runInterview(prompter, existing);
-		saveProfile(db, profile);
-		saved = true;
-	} finally {
-		await prompter.close();
-		db.close();
-	}
-	if (saved) {
-		console.log("Saved your profile locally.");
+	const cmd = parseCliArgs(process.argv.slice(2));
+	switch (cmd.kind) {
+		case "interview":
+			await runInterviewCommand();
+			return;
+		case "scan":
+			process.exitCode = await runScanCommand();
+			return;
+		case "report":
+			await runReportCommand(cmd.month);
+			return;
+		case "help":
+			if (cmd.error) {
+				console.error(cmd.error);
+				console.error(usage());
+				process.exitCode = 2;
+			} else {
+				console.log(usage());
+			}
+			return;
 	}
 }
 
 main().catch((err: unknown) => {
-	// Generic message so profile PII can never ride out in an error string; detail behind DEBUG.
+	// Generic message so profile/bill PII can never ride out in an error string; detail behind DEBUG.
 	console.error("Something went wrong. Re-run with DEBUG=1 for details.");
 	if (process.env.DEBUG) {
 		console.error(err);
