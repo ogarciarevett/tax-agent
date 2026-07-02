@@ -315,3 +315,45 @@ and it writes your language's checks into them — `gofmt`/`go vet`/`go test`, `
 `tsc`/`npm test`, `ruff`/`black`/`mypy`/`pytest`, `cargo fmt`/`clippy`/`test`, etc. — using the
 exact Definition-of-Done commands from your contract. Nothing language-specific ever touches the
 dispatcher hooks or the sync script, so the core stays drop-in for any stack.
+
+## 🗓️ Daily bill scan via cron (tax-agent)
+
+`tax-agent scan` runs one headless pass: it asks your **local** agent CLI (`claude -p` / `codex exec`,
+whichever you're subscribed to) to search Gmail for new billing emails, verifies every amount against
+the email text (nothing is ever fabricated), writes one Markdown file per bill under
+`~/Downloads/tax-agent/YYYY-MM/`, and records it in the local SQLite DB. It is idempotent — already-seen
+emails are skipped — so running it daily is safe. Exit codes: **0** clean · **2** completed with some
+per-item failures · **1** fatal (no profile, or the CLI binary/config is wrong; re-run with `DEBUG=1`).
+
+Prerequisites: run the interview once (`pnpm dev`) so a profile exists, and have your agent CLI logged
+in with a Gmail MCP configured. Config via env (all optional): `TAX_AGENT_LLM=claude|codex` (default
+`claude`), `TAX_AGENT_LLM_MODEL`, `TAX_AGENT_LLM_EFFORT`, `TAX_AGENT_LLM_BIN` (absolute path to the CLI),
+`TAX_AGENT_DOWNLOADS_DIR` (override the output root).
+
+### Install the cron job (you do this once — agents never touch your crontab)
+
+```sh
+mkdir -p data/logs && chmod 700 data/logs   # log dir (gitignored); cron opens this file, so it must exist first
+crontab -e                                    # add the line below (paths are absolute)
+```
+
+```cron
+15 8 * * * /bin/sh /Users/ogarcia/projects/ogarciarevett/tax-agent/scripts/cron-scan.sh >> /Users/ogarcia/projects/ogarciarevett/tax-agent/data/logs/cron.log 2>&1
+```
+
+`scripts/cron-scan.sh` exists because cron runs with an almost-empty environment: it pins `PATH` to
+the nvm node bin that `better-sqlite3` was built against (which also holds `claude`), `~/.bun/bin`
+(`codex`), and `/opt/homebrew/bin` before `exec`-ing the scan, then lets the exit code flow into
+`cron.log`. Logs contain only counts, gmail message ids, row ids, reason codes, and durations —
+**never** a vendor, subject, or amount.
+
+### macOS: grant cron Full Disk Access
+
+macOS TCC blocks `cron` from writing to `~/Downloads` until you allow it. Open **System Settings →
+Privacy & Security → Full Disk Access**, click **+**, press **⌘⇧G**, enter `/usr/sbin/cron`, and enable
+it. If you'd rather not grant it, set `TAX_AGENT_DOWNLOADS_DIR` to an absolute path the cron user can
+write — e.g. the repo-local `data/bills` (gitignored, `0700`):
+
+```cron
+15 8 * * * TAX_AGENT_DOWNLOADS_DIR=/Users/ogarcia/projects/ogarciarevett/tax-agent/data/bills /bin/sh /Users/ogarcia/projects/ogarciarevett/tax-agent/scripts/cron-scan.sh >> /Users/ogarcia/projects/ogarciarevett/tax-agent/data/logs/cron.log 2>&1
+```
