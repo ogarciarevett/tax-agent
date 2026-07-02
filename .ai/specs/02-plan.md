@@ -22,7 +22,7 @@
 | B4 | `es` country module + Spain fixtures | [`B4-spec.md`](./B4-spec.md) | ✅ 5/5 AC (24 tests; 100% cov on module; traceability sweep) |
 | B5 | `scan` orchestration + cron wiring | [`B5-spec.md`](./B5-spec.md) | ✅ 5/6 AC (48 ingest tests; cron-context AC awaits the user's crontab install) |
 | B6 | Month report renderer + TUI table + `report` cmd | [`B6-spec.md`](./B6-spec.md) | ✅ 4/5 AC (golden renders + real-CLI piped run; TTY q-exit needs a human terminal) |
-| B7 | Epic integration + live E2E + consensus review + acceptance | [`B7-spec.md`](./B7-spec.md) | 🔵 gates green · live scan 2 real bills · panel fixes applied |
+| B7 | Epic integration + live E2E + consensus review + acceptance | [`B7-spec.md`](./B7-spec.md) | ✅ 3/3 panel APPROVE · live E2E (2 real bills) · user-side steps listed in 99-acceptance |
 
 Status legend: ⬜ todo · 🔵 in progress · ✅ done (impl + passing test) · 🚫 blocked.
 
