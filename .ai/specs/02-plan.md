@@ -15,8 +15,14 @@
 | Task id | Title | Spec | Status |
 |---------|-------|------|--------|
 | A1 | opentui profile interview + local persistence | [`A1-spec.md`](./A1-spec.md) | ✅ shipped — 4/5 AC ✅ (100% cov, 3/3 review); AC#1 ⚠️ live TUI needs a terminal |
-<!-- Add A2, B1, … (local), or external ids ENG-421 / #123 with a link to the ticket in place
-of the local spec link. -->
+| B0 | CLI router + stub commands | [`B0-spec.md`](./B0-spec.md) | ✅ 4/4 AC (gates green, stubs + regression evidence) |
+| B1 | Bill domain + AgentRunner seam + migrations + ingest repo | [`B1-spec.md`](./B1-spec.md) | ✅ 5/5 AC (75 tests; legacy DB adopted user_version=2) |
+| B2 | Agent-CLI adapter (claude/codex, model+effort) | [`B2-spec.md`](./B2-spec.md) | ✅ 5/5 AC (real `claude -p` smoke PONG; codex stdin `-` pinned) |
+| B3 | Scan task prompt + verification + file writer | [`B3-spec.md`](./B3-spec.md) | ✅ 6/6 AC (33 tests; tolerance = ±1c/VAT line) |
+| B4 | `es` country module + Spain fixtures | [`B4-spec.md`](./B4-spec.md) | ✅ 5/5 AC (24 tests; 100% cov on module; traceability sweep) |
+| B5 | `scan` orchestration + cron wiring | [`B5-spec.md`](./B5-spec.md) | ✅ 5/6 AC (48 ingest tests; cron-context AC awaits the user's crontab install) |
+| B6 | Month report renderer + TUI table + `report` cmd | [`B6-spec.md`](./B6-spec.md) | ✅ 4/5 AC (golden renders + real-CLI piped run; TTY q-exit needs a human terminal) |
+| B7 | Epic integration + live E2E + consensus review + acceptance | [`B7-spec.md`](./B7-spec.md) | 🔵 gates green · live scan 2 real bills · panel fixes applied |
 
 Status legend: ⬜ todo · 🔵 in progress · ✅ done (impl + passing test) · 🚫 blocked.
 
@@ -63,6 +69,18 @@ Each step is a thin vertical slice that ends runnable + green. `AC#n` = A1-spec 
 all logic lives in pure functions (2, 4) and the repo (3) so it's testable without a TTY.
 
 ---
+
+## Epic B — waves & dependencies
+Epic B (daily billing scan via subscription agent-CLI → `~/Downloads/tax-agent/YYYY-MM/` → Spain
+table in TUI; approved plan 2026-07-02) executes in four waves:
+- **Wave 1 (lead, sequential):** B0 → B1 — shared seams (`src/index.ts`, `src/storage/db.ts`,
+  `vitest.config.ts`, `src/domain/`) land once, then freeze.
+- **Wave 2 (3 teammates, file-disjoint):** B2 (`src/llm/**`) ∥ B3 (`src/ingest/**` minus
+  `scan.ts`) ∥ B4 (`src/countries/**`).
+- **Wave 3 (2 teammates):** B5 (`src/ingest/scan.ts`, `src/cli/scan.ts`, `scripts/cron-scan.sh`)
+  ∥ B6 (`src/report/**`, `src/tui/table-view.ts`, `src/cli/report.ts`).
+- **Wave 4 (lead):** B7 — integrated gates, live E2E, 2-of-3 consensus review, acceptance, local
+  commits.
 
 ## Parallel-work notes (optional)
 A1 is a single small vertical slice with a linear dependency chain (1 → 2 → 3 → 4 → 5) — **do not**

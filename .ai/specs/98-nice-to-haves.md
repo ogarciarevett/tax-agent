@@ -38,5 +38,30 @@
   in an ADR with the `es` slice. Cost: M.
 
 ### Functionality / ops
-- Bill/document ingestion + daily cron scan + Spain report generation — later tasks (A2+), each
-  with their own tests. Cost: L.
+- ~~Bill/document ingestion + daily cron scan + Spain report generation~~ — ✅ shipped as epic B
+  (B0–B7, 2026-07-02). Items below are what epic B deliberately deferred.
+
+## Epic B deferred (2026-07-02)
+
+- **Original PDF attachments**: the claude.ai Gmail connector has no attachment-download tool —
+  bills land as extracted Markdown; attachment-only emails are flagged `adjunto pendiente de
+  descarga manual`. Getting originals needs the Gmail API (user rejected) or browser automation.
+  Cost: M.
+- **Income ingestion**: without income data the es module can only emit expense-side estimates —
+  a full Modelo 303/130 needs facturas emitidas / ingresos. Cost: L.
+- **Independent verification pass**: sourceQuote/body come from the same agent session; a
+  second-agent re-read (or original-document check) would harden the never-fabricate gate. Cost: M.
+- **sqlite-vec / RAG embeddings**: not needed for scan/classify/report; add as a migration when
+  semantic search over bills is wanted. Cost: M.
+- **`TAX_AGENT_DB` path override**: report/scan open the default `data/` path relative to cwd;
+  an env override would simplify isolated E2E runs (B6 used a temp cwd instead). Cost: S.
+- **>20 billing threads in a single day**: the hasMore watermark advances by date with a
+  no-progress guard + 20-batch cap; a single day with more than one batch of billing threads is
+  a documented dedup-safe edge (some threads caught on the next daily run). Cost: S.
+- **`DEDUCTIBLE_SHARE` legal review**: conservative defaults in `src/countries/es/rules.ts`
+  (utilities/rent full share — prorrata may apply). Needs user/asesor sign-off. Cost: S.
+- **launchd alternative to cron**: macOS-native scheduling would avoid the Full Disk Access
+  grant UX for `/usr/sbin/cron`; contract currently locks system cron. Cost: S.
+- **`TraceableFigure` has no currency field**: the es "Excluidas (moneda no EUR)" summary figure
+  renders in € formatting although the label says non-EUR (per-bill rows are correct). Optional
+  `currency` on the figure or a label suffix in the es module would fix the cosmetics. Cost: S.
