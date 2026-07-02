@@ -6,8 +6,9 @@
   scan task + never-fabricate gate + file writer · `es` country module · scan orchestration + cron ·
   month report + TUI table · integration/E2E
 - Panel: `code-reviewer` · `security-auditor` · `performance-reviewer` (parallel teammates)
-- Gate: 2-of-3 APPROVE → **security APPROVE · performance APPROVE · code REQUEST_CHANGES →
-  all findings applied same pass → re-verdict requested** (see below)
+- Gate: 2-of-3 APPROVE → **met 3/3**: security APPROVE · performance APPROVE · code
+  REQUEST_CHANGES → all findings applied same pass → code re-review (independent diff read +
+  gates re-run by the reviewer) → **APPROVE**
 - Traces to: [`B0-spec.md`](./B0-spec.md)…[`B7-spec.md`](./B7-spec.md) · deferred items in
   [`98-nice-to-haves.md`](./98-nice-to-haves.md)
 

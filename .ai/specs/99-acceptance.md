@@ -20,8 +20,9 @@
   - `report --month 2026-07` (piped): real table — Taxfix 120,88 € (IVA 20,98 €), Glovo (meals)
     58,00 € → Total EUR 178,88 €; es block with [LIVA-90.Uno]/[LIVA-95]/[LIRPF-30]/[AEAT-M303/130]
     citations; meals correctly non-deductible (deducible = 20,98 €, only Taxfix).
-- Consensus panel: security **APPROVE** · performance **APPROVE** · code **REQUEST_CHANGES → all
-  findings (1 CRITICAL, 2 MED, LOWs) applied same pass** (see `03-review.md`), re-verdict requested.
+- Consensus panel: **3/3 APPROVE** — security · performance · code (initial REQUEST_CHANGES with
+  1 CRITICAL + 2 MED + LOWs, all applied same pass and independently re-verified by the reviewer;
+  see `03-review.md`).
 
 ## Epic B acceptance — per task (aggregating each Honest Implementation Report)
 | Task | Metric | Evidence highlights | Open items |
