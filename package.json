@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"description": "Local-first personal tax agent (Spain first) — opentui interview, on-device storage, daily bill scan, country-correct report.",
+	"description": "Tax Agent — Financial Intelligence Graph. Pipeline/bootstrap phase; src/ is the frozen Legacy CLI v0 (Spain-only, local-first).",
 	"engines": {
 		"node": ">=22"
 	},
@@ -12,7 +12,9 @@
 		"typecheck": "tsc --noEmit",
 		"check": "biome check",
 		"test": "vitest run --coverage",
-		"test:watch": "vitest"
+		"test:watch": "vitest",
+		"test:graph": "node scripts/validate-task-graph.test.mjs",
+		"graph:validate": "node scripts/validate-task-graph.mjs .ai/specs/task-graphs/*.json"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.2",

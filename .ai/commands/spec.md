@@ -1,31 +1,56 @@
 ---
-description: Start spec-driven development for ONE task — fix its id and spec source, then write its spec
+description: Open ONE task — fix its id and spec source, record the blast radius, and write the behavioral contract for human approval
 ---
 
-Invoke the agent-skills:spec-driven-development skill. The lifecycle runs PER TASK; `/spec`
-opens a task by fixing its identity and writing (or locating) its spec.
+# /spec — stage 2, the behavioral contract
 
-## 1. Determine the task id and spec source (state which you detected)
-See `.ai/context.md` → "Task identity & spec source". Detect the backlog source — this works on
-every CLI (no tool lock-in):
+Invoke the agent-skills:spec-driven-development skill.
 
-- **External backlog — Linear or GitHub Projects.** Detect: GitHub Projects via
-  `gh project list` (or `gh project list --owner <org>`) returning ≥ 1 project; Linear via a
-  configured Linear MCP server (`.mcp.json` / the tool's MCP config), a `LINEAR_API_KEY`, or
-  `eng-123`-style branch/commit keys. If found, the task id is the EXTERNAL id (`ENG-421`,
-  `#123`) and the ticket body is the spec. Do NOT create a local `<id>-spec.md`. Read the ticket,
-  summarize its goal + acceptance criteria, cite the id, and skip to step 3.
-- **No external backlog.** Assign the next local id in the `A1, A2, B1, …` scheme
-  (letter = feature/epic, number = task within it) and save the spec as `.ai/specs/<id>-spec.md`,
-  copied from `.ai/specs/_task-spec.template.md`. Register the task in the `.ai/specs/02-plan.md`
-  index.
+## 0. Identify (stage 0) — do this before writing anything
 
-## 2. Write the per-task spec
-Ask clarifying questions only where needed: objective, acceptance criteria (each must be
-testable), constraints, and boundaries. Then fill the task spec — goal, scope/non-goals,
-acceptance criteria, interfaces/data touched, risks. Trace UP to `.ai/specs/01-spec.md` (the
-project architecture); don't restate it. Keep one task per spec file.
+Detect the backlog source and **state which one you detected and how** (`.ai/context.md` → "Task
+identity & spec source"):
 
-## 3. Confirm
-Show the task id, where its spec lives (local `.ai/specs/<id>-spec.md` or the external ticket),
-and the acceptance criteria. Confirm with the user (`approved` / `change: …`) before `/plan`.
+- GitHub Projects → `gh project list` returns >= 1 project.
+- Linear → a Linear MCP server configured in this repo's `.mcp.json`, `LINEAR_API_KEY` set, or
+  `eng-123` branch/commit keys. A user-level connector this repo does not configure does NOT count.
+- Inconclusive (e.g. `gh` lacks the `read:project` scope) → say so plainly and use the local scheme.
+- Neither → local letter+number id (`A`/`B` = legacy epics, `P` = pipeline/platform).
+
+Then classify the task: is it **financially material**? does it **change the operating contract**?
+Both decide which reviewers are mandatory at `/consensus-review`.
+
+## 1. Map
+
+Run `/map` first (or its steps inline). You cannot scope what you have not looked at.
+
+## 2. Write the spec
+
+External backlog → the ticket IS the spec: read it, cite its id, do NOT create a local duplicate.
+Otherwise → copy `.ai/specs/_task-spec.template.md` to `.ai/specs/<id>-spec.md` and fill:
+
+- **Goal** — one sentence.
+- **Scope / non-goals** — what this task explicitly does not do.
+- **Acceptance criteria** — each testable, numbered; these become the Honest Implementation Report
+  rows and the evidence-graph requirements.
+- **Invariants** — properties that must hold after this task, each with the test that would catch a
+  violation.
+- **Tenancy & security boundaries** — who may read/write what; the authorization filter involved.
+- **Data classification** — PII / financial fact / derived figure / public.
+- **Graph delta** — the nodes and edges this task intends to add, modify, or remove.
+- **Affected loops** — which state transitions change behavior.
+- **Blast radius** — from `/map`, with `file:line` citations.
+- **Risks & assumptions**, and **open decisions** that genuinely need a human.
+
+If the task is already fully covered by the approved `.ai/specs/01-spec.md`, cite that section
+instead of duplicating it. Trace UP to the project architecture; do not restate it. One task per
+spec file.
+
+## 3. Register and stop
+
+Register the task id in the `.ai/specs/02-plan.md` index. Show the task id, where its spec lives,
+and the acceptance criteria. Then **stop and get human approval** (`approved` / `change: …`).
+Approval of the spec is a hard gate — `/plan` may not run before it.
+
+Never invent an acceptance criterion you cannot test. An untestable criterion becomes an
+unverifiable claim later, which is how false ✅ rows get written.

@@ -1,359 +1,373 @@
-<!-- logo: figlet "ANSI Shadow" — regenerate with:  figlet -f "ANSI Shadow" "cross-ai" -->
-```
- ██████╗██████╗  ██████╗ ███████╗███████╗       █████╗ ██╗
-██╔════╝██╔══██╗██╔═══██╗██╔════╝██╔════╝      ██╔══██╗██║
-██║     ██████╔╝██║   ██║███████╗███████╗█████╗███████║██║
-██║     ██╔══██╗██║   ██║╚════██║╚════██║╚════╝██╔══██║██║
-╚██████╗██║  ██║╚██████╔╝███████║███████║      ██║  ██║██║
- ╚═════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝      ╚═╝  ╚═╝╚═╝
-```
-
 <div align="center">
 
-# cross-ai-template
+# tax-agent
 
-**One operating contract for every AI coding tool — from a single source of truth.**
+**Tax Agent — Financial Intelligence Graph**
 
-![Claude Code](https://img.shields.io/badge/Claude_Code-D97757?style=for-the-badge)
-![Cursor](https://img.shields.io/badge/Cursor-000000?style=for-the-badge)
-![Codex](https://img.shields.io/badge/Codex-412991?style=for-the-badge)
-![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-4285F4?style=for-the-badge)
-![opencode](https://img.shields.io/badge/opencode-FF6B00?style=for-the-badge)
+*A reusable, multi-user financial intelligence platform.
+Deterministic accounting over append-only facts, explained by a graph, evidenced by documents,
+and never asserting a number it cannot trace.*
 
-![skills](https://img.shields.io/badge/skills-27-8b5cf6?style=flat-square)
-![commands](https://img.shields.io/badge/commands-12-06b6d4?style=flat-square)
-![personas](https://img.shields.io/badge/personas-4-ec4899?style=flat-square)
-![config drift](https://img.shields.io/badge/config_drift-zero-22c55e?style=flat-square)
-![sync](https://img.shields.io/badge/sync-POSIX_shell-4EAA25?style=flat-square&logo=gnubash&logoColor=white)
-![runtime deps](https://img.shields.io/badge/runtime_deps-none-22c55e?style=flat-square)
+![status](https://img.shields.io/badge/status-pipeline_%2F_bootstrap_phase-f59e0b?style=flat-square)
+![platform](https://img.shields.io/badge/platform-not_implemented-64748b?style=flat-square)
+![legacy CLI](https://img.shields.io/badge/legacy_CLI_v0-shipped_%26_frozen-22c55e?style=flat-square)
+![pipeline](https://img.shields.io/badge/pipeline-V2_graph_orchestrated-8b5cf6?style=flat-square)
 
 </div>
 
-A drop-in scaffold that gives **every** AI coding tool in your repo the same operating
-contract, lifecycle, skills, personas, and commands — from **one source of truth**.
-
-You edit `.ai/`. A single generator (`scripts/sync-ai-docs.sh` — **dependency-free POSIX shell**,
-no node/bun/python) materializes the tool-specific configs for **Claude Code, Cursor, Codex,
-Gemini CLI, and opencode**. No more hand-maintaining `CLAUDE.md`, `.cursor/rules`, and a Gemini
-config separately and watching them drift. Drop it into a project in **any language** — the
-machinery needs nothing but a shell.
-
-## 🎬 See it in action
-
-![cross-ai-template — one .ai/ edit fans out to every tool, with a drift gate](docs/imgs/demo.gif)
-
-One edit to `.ai/context.md` → `sh scripts/sync-ai-docs.sh` → the same rule lands in every
-tool's config: inlined into `AGENTS.md`/`.cursor` (Codex, Cursor, GitHub web) and `@`-imported
-by the `CLAUDE.md`/`GEMINI.md` stubs. Then the pre-commit hook re-runs the sync and **blocks** a
-contract edit that wasn't re-synced.
-
-## 🧩 How it works
-
-```
-.ai/                      ← the ONLY files you hand-edit (source of truth)
- ├─ context.md            project contract (stack, Definition of Done, hard rules)
- ├─ pipeline.md           the generic spec→plan→build→test→review lifecycle
- ├─ commands/*.md         slash-command definitions
- ├─ agents/*.md           reviewer personas (code / security / performance / test)
- ├─ skills/*/SKILL.md     reusable workflow skills (TDD, code review, CI/CD, …)
- ├─ references/*.md       checklists the skills/personas cite
- ├─ specs/*.md            project specs (00–99) + per-task specs (A1, A2, … or external ids)
- └─ memory.example.md     seed for the local, gitignored working log
-
-      │   sh scripts/sync-ai-docs.sh   (POSIX shell, no runtime deps — deterministic)
-      ▼
-AGENTS.md · CLAUDE.md · GEMINI.md                              ← committed contract entry files
-.ai/generated/ · .claude/ · .gemini/ · .opencode/ · .cursor/  ← sync-owned mirrors: GITIGNORED,
-                                                                regenerated locally (no git dups)
-.agents/ · .codex/agents/                                      ← Codex-local runtime adapters:
-                                                                GITIGNORED, tool-owned
-```
-
-| Tool | Reads | Produced as |
-|------|-------|-------------|
-| Claude Code | `CLAUDE.md` + `.claude/{commands,agents,skills}` | `@AGENTS.md` stub + copied assets |
-| Cursor | `.cursor/rules/00-context.mdc` | symlink → `.ai/generated/rules.mdc` |
-| Codex | `AGENTS.md` + `.codex/config.toml` | inlined contract + MCP config; may create ignored local adapters |
-| Gemini CLI | `GEMINI.md` + `.gemini/{commands(TOML),agents,skills}` | `@AGENTS.md` stub + transformed assets |
-| opencode | `.ai/*` directly + `.opencode/{commands,agents}` | reads source + copied assets |
-
-**Never edit a generated file** — your edit is overwritten on the next sync. The per-tool mirrors
-(`.claude/ .gemini/ .opencode/ .cursor/ .ai/generated/`) and Codex-local adapters
-(`.agents/ .codex/agents/`) are **gitignored**, so the repo holds only the `.ai/` source with no
-duplicated copies — **run `sh scripts/install.sh` once after cloning** or your tools see zero
-skills. Codex may recreate its adapters when the repo loads; that is runtime plumbing, not source
-of truth. Only the root contract files (`AGENTS.md` / `CLAUDE.md` / `GEMINI.md`) stay committed
-(readable on GitHub, no build step); the pre-commit hook gates those. Change a convention in
-`.ai/`, run `sh scripts/sync-ai-docs.sh`, commit.
-
-## ⚡ Quick start (adopt into your repo)
-
-1. Copy `.ai/`, `scripts/`, `.gitignore`, `.gitattributes`, `.githooks/`, `.codex/config.toml`,
-   and `.mcp.json` into your repo — or start your repo from this template. The per-tool mirrors
-   (`.claude/ .gemini/ .opencode/ .cursor/`) and Codex adapters (`.agents/ .codex/agents/`) are
-   **not** copied or committed — `install.sh` or the tool runtime regenerates them locally.
-   **No `package.json` needed** — the machinery is pure shell.
-2. Install the hooks and run the first sync (one command, no runtime to install):
-   ```sh
-   sh scripts/install.sh   # git config core.hooksPath .githooks + chmod + first sync
-   ```
-3. **Fill the contract** — two ways:
-   - **Fastest:** open the repo in your AI tool and run **`/bootstrap`** — it interviews you,
-     fills `.ai/context.md` (and can seed the specs), **wires your language's pre-commit /
-     post-commit hooks**, and runs the sync for you.
-   - **By hand:** edit `.ai/context.md` (your Project, locked Stack, Definition of Done, hard
-     rules — look for the `<!-- FILL: … -->` markers), and drop your language's checks into
-     `.githooks/pre-commit.d/` and `.githooks/post-commit.d/` (see those dirs' READMEs).
-4. Regenerate (skip if you ran `/bootstrap` or `install.sh` — they already synced):
-   ```sh
-   sh scripts/sync-ai-docs.sh
-   ```
-5. Open the repo in any supported tool — it now follows the same contract everywhere.
-
-## 📐 Filling the specs (two ways)
-
-`.ai/specs/` ships as **empty skeletons** — the section headings *are* the required format.
-Project-level docs use the numeric scheme (`00-requirements.md` → `01-spec.md` → `02-plan.md` →
-`99-acceptance.md`); per-task specs use a letter+number id (see below). Populate them either way:
-
-- **By hand** — edit `00-requirements.md` → `01-spec.md`, then add per-task specs as you go.
-- **With the agent (recommended)** — this template already includes the spec generator. Run the
-  lifecycle commands and let the agent write the files:
-  ```
-  /spec     # → fixes the task id + writes .ai/specs/<id>-spec.md (or cites the ticket)
-  /plan     # → records the task's steps in .ai/specs/02-plan.md (the backlog index)
-  ```
-  Optional: `/excalidraw-spec` renders the architecture diagram via the excalidraw MCP server.
-
-You don't need an external spec tool — `/spec` + the `spec-driven-development` skill *are* the
-"open-spec" workflow, built in.
-
-### 🆔 Per-task spec ids (and when to skip them)
-
-The lifecycle runs **per task**, and each task needs an id and a home for its spec. The rule:
-
-- **If the repo uses an external backlog — Linear or GitHub Projects — that tracker is the source
-  of truth.** The task id is the external one (`ENG-421`, `#123`), the ticket body is the spec,
-  and **no local spec file is created** (it would only duplicate and drift from the ticket).
-- **If the repo has no external backlog**, the spec is **saved in the repo** as
-  `.ai/specs/<id>-spec.md` with a letter+number id — `A1-spec.md`, `A2-spec.md`, `B1-spec.md`, …
-  (letter = feature/epic, number = task) — from the `_task-spec.template.md` skeleton.
-  `02-plan.md` is the local backlog/index of every task id.
-
-`/spec` **detects the source** (vendor-neutral, so every CLI behaves the same): GitHub Projects
-via `gh project list`; Linear via a configured Linear MCP server / `LINEAR_API_KEY` / `eng-123`
-branch keys. Full rule: [`.ai/context.md`](.ai/context.md) → "Task identity & spec source".
-
-### ✅ Honest Implementation Metric (anti-overclaim)
-
-LLMs tend to claim a task is "done" even when a step was skipped, stubbed, or never run. The
-contract forbids that: every task closes with an **Honest Implementation Report** (emitted by
-`/build`, rolled up by `/acceptance`). Each acceptance criterion gets a status —
-✅ verified · ⚠️ partial · 🔧 stubbed · ❌ not done · 🚫 blocked — that is **✅ only if the proving
-command output is pasted inline**. The metric is `verified ✅ ÷ total = NN%`, plus explicit
-*Unverified* and *Could-not-do* lists. **Over-claiming is a contract violation; under-claiming is
-fine.** Because it lives in the inlined contract, every tool (Claude Code, Codex, Cursor, Gemini,
-opencode) enforces it. Full rule: [`.ai/context.md`](.ai/context.md) → "Honesty protocol".
-
-## 🔁 The lifecycle
-
-Per task: `/spec → /plan → /build → /test → /review` (one task = one vertical slice; `/build`
-closes it with an Honest Implementation Report).
-Once, at the end: `/consensus-review → /code-simplify → /ship → /acceptance → /goal`.
-Optional, on a cadence: `/evolve` — re-sync the `.ai/` contract to the code (all CLIs;
-`/graphify` accelerates it on Claude Code).
-Full definition: [`.ai/pipeline.md`](.ai/pipeline.md).
-
-## 🎚️ Per-stage model routing (opencode)
-
-The lifecycle stages are just commands, so you can run **each stage on the best-fit model** —
-cheap/fast for mechanical work, frontier for reasoning — to optimize cost and tokens. This is
-**opt-in** and applies to **opencode** (the model-agnostic CLI). Single-vendor tools optimize
-*within* their own ladder instead (Claude Code routes Haiku↔Sonnet↔Opus) and ignore the key, so
-the same sources stay valid everywhere.
-
-Add an optional `model:` key to any command or persona's frontmatter — opencode honors it on both
-`.opencode/commands/` and `.opencode/agents/`:
-
-```yaml
 ---
-description: Implement the next task incrementally — build, test, verify, commit
-model: openrouter/anthropic/claude-sonnet-4   # capable model for implementation
----
+
+## ⚠️ Current status — read this first
+
+**The platform described below is NOT implemented.** No PostgreSQL schema, no Next.js app, no
+ledger, no domain graph, no UI. This repository is in its **pipeline / bootstrap phase**: the work
+completed so far is the *operating contract* and the *delivery pipeline* that will govern building
+the platform.
+
+What **does** exist and run today is the **Legacy CLI (v0)** — a shipped, tested, single-user,
+Spain-only local-first tax CLI on an entirely different stack. It is **frozen** and **not deleted**.
+See [Legacy CLI (v0)](#-legacy-cli-v0--shipped-frozen).
+
+This ordering is deliberate. The product's dominant failure mode is a confident wrong number, so the
+machinery that will build it is specified, reviewed and validated *before* it is trusted with money.
+
+## 💡 Product thesis
+
+A household's finances are spread across accounts, institutions, debts, assets, obligations, goals
+and jurisdictions. The information needed to reason about them already exists — in statements,
+invoices and rules — but nothing connects it, and nothing can explain a conclusion afterwards.
+
+Tax Agent assembles that position from **append-only financial facts**, explains it with a
+**financial domain graph**, evidences it with **ingested documents**, and surfaces **auditable
+recommendations that a human approves before anything happens**.
+
+It is built to be reusable and multi-tenant from day one: arbitrary users, households, household
+members, accounts, institutions, liabilities, assets, jurisdictions, currencies, goals, tax
+calendars, risk tolerances and recurring obligations. The initial owner's real financial data may
+later appear as private seed data — **it must never become universal business logic**.
+
+## 🔒 Core correctness principles
+
+The fourteen non-negotiables ([`.ai/context.md`](.ai/context.md)):
+
+1. No loss or silent mutation of financial facts
+2. Deterministic monetary calculations
+3. **No floating-point money arithmetic**
+4. Explicit currency on every monetary value
+5. Household and tenant isolation
+6. Provenance for every imported fact
+7. **No LLM-only financial arithmetic**
+8. **No LLM-initiated transfer, trade or debt payment**
+9. Explicit separation between actual, planned, forecast, simulated and recommended
+10. Immutable scenario inputs
+11. Reproducible recommendations
+12. Evidence and assumptions attached to every financially material recommendation
+13. No stablecoin represented as equivalent to a protected bank deposit
+14. No tax estimate represented as professional tax advice
+
+Two of these already have a working precedent in the legacy tree: money is integer cents throughout,
+and `TraceableFigure` **throws** if constructed without sources — "no number without a source" is a
+runtime invariant, not a review checklist item.
+
+## 🕸️ Four graphs — never conflated
+
+The structural core ([ADR 0002](docs/adr/0002-graph-source-of-truth-separation.md)). Authority is
+the column that matters:
+
+| # | Graph | Purpose | Authority | Lives in |
+|---|-------|---------|-----------|----------|
+| 1 | **Repository reality** | files, modules, imports, tests, commands — blast radius | **descriptive only**, never normative | ephemeral, gitignored |
+| 2 | **Task execution** | one task as a dependency DAG — readiness, critical path, safe parallelism | normative for order; **subordinate to its spec** | `.ai/specs/task-graphs/*.json` |
+| 3 | **Financial domain** | relationships, blockers, enablers, exposure, provenance, explanations | normative for *why* | PostgreSQL *(Phase 1)* |
+| 4 | **Evidence** | requirement → behavior → implementation → test → passing output | normative for **"is it done"** | task reports + `99-acceptance.md` |
+
+Two rules do the heavy lifting:
+
+- **The ledger is the source of financial truth.** The domain graph *explains* it and never replaces
+  it. No authoritative balance is stored in graph 3.
+- **RAG is never authoritative for current balances.** It supplies documentary evidence and
+  historical context. A balance answered from a retrieved PDF is as old as the PDF.
+
+## 🔁 Graph + loop + hardness
+
+Three ideas the pipeline is built from — each has a skill under [`.ai/skills/`](.ai/skills/):
+
+- **Graph** — work is a validated DAG, not a checklist. Nodes carry read/write sets, invariants,
+  verification commands and evidence. Progress lives in a committed file, so it survives a lost
+  context or a different agent picking it up tomorrow. → `graph-orchestrated-delivery`
+- **Loop** — a financial loop is closed only when the **outcome** feeds back into the next plan.
+  Judged on its failure paths, not its happy path: retry, resume, idempotency, compensation, and a
+  human approval gate before any financially material effect. → `financial-loop-engineering`,
+  `financial-graph-engineering`
+- **Hardness** — the system must be unable to claim what it has not proven. Every hard gate must
+  have been *observed failing*; evidence is files, diffs and pasted output — never a reviewer's
+  opinion, never an agent's `done` status. → `financial-hardness-engineering`
+
+> A gate that cannot fail is not a gate. This repository carried "coverage ≥ 80%" in its Definition
+> of Done while the only test run was `post-commit`, whose script swallowed failures and exited 0 —
+> with no CI. Nothing could ever fail on tests. That is the class of defect hardness engineering
+> exists to find.
+
+## 🧱 Locked stack
+
+TypeScript 7 · Bun · Next.js App Router · React Server Components by default · PostgreSQL ·
+pgvector · PostgreSQL lexical retrieval · hybrid lexical + vector retrieval with reciprocal-rank
+fusion · Drizzle ORM · Zod · shadcn/ui · Tailwind CSS · OpenTelemetry · structured logging ·
+Vitest · Playwright · Docker Compose · committed SQL migrations.
+
+### PostgreSQL version posture
+
+[ADR 0004](docs/adr/0004-postgresql-19-version-posture.md). **PostgreSQL 19 is the development and
+compatibility target; production posture remains the latest supported PostgreSQL 18** until 19
+reaches general availability and passes compatibility validation here.
+
+As of 2026-08-02, **PostgreSQL 19 is in Beta 2** (released 2026-07-16) and is **not** generally
+available. This contract does not describe a beta as production-ready. Migrations and core queries
+are evaluated against both versions during the transition; the decision is revisited via `/evolve`
+and a human-reviewed ADR update at GA.
+
+### Retrieval honesty
+
+pgvector is the vector store — no separate vector database, no Elasticsearch or OpenSearch without
+an ADR and evidence. And PostgreSQL's `ts_rank` **must not be called BM25 unless it is BM25**: the
+concrete lexical-ranking implementation must be identified, benchmarked and documented in an ADR
+*before* retrieval production code begins.
+
+### Out of bounds without an ADR
+
+JavaScript floating-point money · a dedicated graph database in the initial phases · an external
+vector database · LLM-generated SQL outside a controlled query layer · LLM mutation of financial
+facts · production use of prerelease database software · hidden background financial actions ·
+multi-tenant access without explicit authorization filters · hand-edited generated agent files.
+
+## 📐 Source-of-truth model
+
+One source, many tools. You hand-edit only `.ai/`; everything else is generated by
+`scripts/sync-ai-docs.sh` (POSIX shell + awk, **zero runtime dependencies**).
+
+```
+.ai/                              ← the ONLY files you hand-edit
+├── context.md                    project operating contract
+├── pipeline.md                   the lifecycle (Pipeline V2)
+├── commands/                     slash commands
+├── agents/                       specialist personas
+├── skills/                       reusable workflows
+├── references/                   schemas + checklists cited by path
+└── specs/                        requirements, architecture, per-task specs
+    └── task-graphs/<id>.json     compiled, validated dependency DAGs
+
+AGENTS.md · CLAUDE.md · GEMINI.md ← GENERATED, committed (never hand-edit)
+.claude/ .gemini/ .opencode/ .cursor/ .ai/generated/  ← GENERATED, gitignored
 ```
 
-A sensible cheap↔frontier map across the lifecycle (tune to taste; pull current model ids from
-[models.dev](https://models.dev)):
+- `AGENTS.md` **inlines** the full contract, so it is readable on GitHub and in any tool without
+  `@`-import support. `CLAUDE.md` and `GEMINI.md` are thin `@AGENTS.md` stubs.
+- Per-tool mirrors are **gitignored and local-only** — the repo carries no duplicated skill,
+  command, or persona copies. Run the sync once per clone or your tools see zero skills.
+- The pre-commit hook **regenerates and blocks** if a committed contract file drifted, and blocks if
+  a generated mirror ever becomes tracked.
 
-| Stage | Tier | Why |
-|-------|------|-----|
-| `/spec`, `/review`, `/consensus-review` | frontier | contract design, subtle-bug catching |
-| `/build` | capable | implementation correctness |
-| `/plan`, `/test`, `/code-simplify` | fast/cheap | decomposition, red-green, mechanical edits |
-| `/ship` | cheap | mechanical commits |
+**To change a convention:** edit the `.ai/` source → `sh scripts/sync-ai-docs.sh` → inspect the diff
+→ commit. A change that leaves generated docs stale is incomplete.
 
-**One bill, every vendor.** Point opencode at [OpenRouter](https://openrouter.ai) so adopting a
-newly released model is a one-line change, not a new subscription. In `opencode.json`:
+## ♻️ Lifecycle — Pipeline V2
 
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "provider": {
-    "openrouter": { "options": { "apiKey": "{env:OPENROUTER_API_KEY}" } }
-  },
-  "model": "openrouter/anthropic/claude-sonnet-4"
-}
+[ADR 0001](docs/adr/0001-graph-orchestrated-loop-pipeline.md) ·
+[`.ai/pipeline.md`](.ai/pipeline.md)
+
+```
+0 IDENTIFY → 1 /map → 2 /spec →[human]→ 3 /plan →[human]→ 5 select READY node
+  → 6 NODE LOOP: RED → BUILD → GREEN → /review → /reconcile → VERIFY → commit
+  → 7 /test → 8 /consensus-review → 9 /code-simplify → 10 /ship
+  → 11 /acceptance → 12 /goal → 13 /evolve
 ```
 
-**This repo automates that routing.** Per-stage picks live in
-[`scripts/opencode-model-routing.sh`](scripts/opencode-model-routing.sh) — a single
-DeepSWE-grounded map (stage → OpenRouter model id). `sh scripts/sync-ai-docs.sh` stamps the
-`model:` key into the `.opencode/` copies **only**; the `.claude/` (Anthropic), `.codex/`
-(OpenAI), and `.gemini/` (Google) mirrors never receive a foreign id, and Gemini's transform
-drops the key anyway. The map is the only file you edit to re-route; if it's absent, sync falls
-back to a plain copy and the template stays vendor-neutral. Current spread:
-`spec` / `review` / `consensus-review` + `security-auditor` → `gpt-5.5` (frontier);
-`build` / `acceptance` / `evolve` / `bootstrap` + the other reviewers → `gpt-5.4` (value);
-`plan` / `test` / `code-simplify` / `ship` / `excalidraw-spec` → `gpt-5.4-mini` (cheap).
+Each node moves through an explicit state machine —
+`PROPOSED → READY → IMPLEMENTING → TESTED → REVIEWED → RECONCILED → VERIFIED`, plus `BLOCKED`,
+`TEST_FAILED`, `REVIEW_FAILED`, `GRAPH_DRIFT`, `INVARIANT_FAILED`, `SUPERSEDED`.
+**No state may be skipped. Failure moves backward, never forward.**
 
-**Keep `.ai/` vendor-neutral.** Don't hardcode a provider's model id into a *committed* template
-command — that would betray the agnostic point. Per-stage routing is something a downstream
-project opts into for its own opencode runtime; the template just documents the convention.
-Automatic routers (OpenRouter's `openrouter/auto`, etc.) exist but optimize for quality, not cost
-— a declared per-stage map is the predictable choice.
+| Command | Owns | Does NOT own |
+|---------|------|--------------|
+| `/map` | blast radius, current-state map (no writes) | requirements |
+| `/spec` | behavioral contract, acceptance criteria, invariants, graph delta | node decomposition |
+| `/plan` | compiling + validating the task DAG | writing code, approving its own graph |
+| `/build` | ONE node: RED → GREEN → node gates → node commit | integration testing, reviewer fan-out |
+| `/test` | subgraph integration, property/invariant/tenancy suites, coverage gate | per-node RED/GREEN |
+| `/review` | one node or subgraph, six axes | multi-persona fan-out |
+| `/reconcile` | planned vs actual impact; unexplained scope | changing the spec |
+| `/consensus-review` | **all** reviewer fan-out + verdict | committing |
+| `/code-simplify` | applying approved findings | removing provenance, invariants or evidence |
+| `/ship` | mechanical close: gates, status, log, PR body | fan-out, pushing, PRs, deploys |
+| `/acceptance` | the evidence graph | marking ✅ without pasted output |
+| `/goal` | closure over incomplete nodes | declaring done because it compiles |
+| `/evolve` | proposing drift patches | applying anything silently |
 
-## 📦 What's included
+**Consensus is by mandatory reviewer, not majority.** For pipeline-contract changes the panel is
+`code-reviewer` + `graph-consistency-reviewer` + `loop-correctness-reviewer` + `security-auditor`,
+and **all** must approve. Majority voting cannot override a correctness proof failure.
 
-- **Commands** (`.ai/commands/`): `bootstrap` (one-time setup), `spec`, `plan`, `build`,
-  `test`, `review`, `consensus-review`, `code-simplify`, `ship`, `acceptance`, `excalidraw-spec`,
-  and `evolve` (contract drift detection).
-- **Personas** (`.ai/agents/`): `code-reviewer`, `security-auditor`, `performance-reviewer`,
-  `test-engineer`. See [`.ai/agents/README.md`](.ai/agents/README.md).
-- **Skills** (`.ai/skills/`): 27 reusable workflows — TDD, code review, CI/CD,
-  incremental implementation, security hardening, debugging, API design, UI/UX craft via
-  `impeccable`, plus `evolve` (graphify-backed contract-vs-code drift) and more.
-- **Parallel fan-out** (no committed scripts): the `/consensus-review` 2-of-3 panel,
-  file-disjoint parallel slices, and `/evolve`'s per-dimension scan all run on each tool's
-  **native** parallelism — an Agent Team in Claude Code, sub-agents in Codex / Gemini /
-  opencode. See the "Parallel work" section of [`.ai/pipeline.md`](.ai/pipeline.md). Keeping
-  this language-/tool-agnostic (rather than shipping tool-specific scripts) is deliberate.
-- **References** (`.ai/references/`): checklists the personas/skills cite.
-
-## 🧠 Memory
-
-`.ai/memory.md` is a **local, gitignored** per-developer working log, seeded from
-`.ai/memory.example.md` on first sync. Terse `symptom → root cause → fix` entries. Durable,
-team-facing decisions go in commit messages or `docs/adr/`, not here. Never write secrets.
-
-## 🔌 MCP servers
-
-`.mcp.json` ships one server: `excalidraw` (used by `/excalidraw-spec`). Add your own
-(database, search, etc.) there; `.codex/config.toml` mirrors MCP config for Codex.
-
-## 🔄 Keeping it in sync
-
-- `sh scripts/sync-ai-docs.sh` — regenerate every per-tool mirror from `.ai/` (no runtime deps).
-  The mirrors/adapters are gitignored/local-only, so run this once per clone (or
-  `sh scripts/install.sh`).
-- `sh scripts/sync-ai-docs.sh && git diff --exit-code` — regenerate and fail if a **committed**
-  file drifted (only `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` are committed now; use in CI).
-- `.githooks/pre-commit` runs the sync gate automatically once
-  `git config core.hooksPath .githooks` is set (done by `sh scripts/install.sh`), then runs
-  any language checks you (or `/bootstrap`) put in `.githooks/pre-commit.d/`.
-
-### ⬆️ Pulling template updates into a downstream repo
-
-When this template improves, refresh a repo you created from it with one command — run from
-inside that repo:
+### Task graphs are validated, not vibed
 
 ```sh
-sh scripts/update-from-template.sh            # if your repo already has the script
+node scripts/validate-task-graph.mjs .ai/specs/task-graphs/P1.json             # cycles, unexplained nodes, evidence
+node scripts/validate-task-graph.mjs --ready .ai/specs/task-graphs/P1.json     # what can be worked on now
+node scripts/validate-task-graph.mjs --reconcile .ai/specs/task-graphs/P1.json # unexplained scope
+pnpm test:graph                                                                # the validator's own tests
 ```
 
-**First time, in a repo that predates the updater?** Older clones don't ship the script yet —
-bootstrap it once (either way, run from the repo root) and it self-installs for next time:
+Zero dependencies, non-zero exit on any violation. It stores no state, schedules nothing, and
+executes no nodes — it is **not** a workflow engine.
+
+## 🖥️ Herdr — boundaries
+
+Development may run inside [Herdr](https://herdr.dev), a terminal/agent multiplexer, to host
+reviewers in separate panes for observability and cross-model diversity (e.g. a `codex` reviewer
+auditing work done by Claude). [ADR 0003](docs/adr/0003-herdr-orchestration-boundary.md) fixes what
+it is allowed to be:
+
+| It IS | It is NOT |
+|-------|-----------|
+| an execution surface | the workflow source of truth |
+| an observability surface | the task-graph database |
+| a way to run independent analyses concurrently | the evidence store |
+| | permission for two agents to edit the same files |
+
+**Agent status is visibility, not proof.** `idle`, `done` and `unknown` say nothing about
+correctness. **The pipeline must work without Herdr** — every stage is a slash command usable in any
+supported CLI.
+
+Read-only fan-out is always safe. Parallel **writers** require disjoint write sets, no dependency
+path, non-overlapping schema ownership, and **separate git worktrees** — and contract work is always
+single-writer.
+
+## 🚀 Local setup
 
 ```sh
-# A. git only, no extra tools (recommended — git is already required)
-git fetch https://github.com/ogarciarevett/cross-ai-template.git main
-git checkout FETCH_HEAD -- scripts/update-from-template.sh
-sh scripts/update-from-template.sh
-
-# B. one-liner, nothing to check out (append `-s -- --dry-run` to preview first)
-curl -fsSL https://raw.githubusercontent.com/ogarciarevett/cross-ai-template/main/scripts/update-from-template.sh | sh
+git clone git@github.com:ogarciarevett/tax-agent.git && cd tax-agent
+sh scripts/install.sh          # regenerates the gitignored per-tool mirrors + wires git hooks
+pnpm install
 ```
 
-Both end the same way: the script clones the template, refreshes the generic half, and copies
-itself into `scripts/` — so every later update is just `sh scripts/update-from-template.sh`.
+Without the sync step your tools see **zero** skills, commands, or personas — the mirrors are
+local-only by design.
 
-> Prefer a packaged CLI over the shell one-liner? The updater is also published as `cross-ai-cli`
-> (npm · crates.io · PyPI) from the companion repo
-> **[cross-ai](https://github.com/ogarciarevett/cross-ai)** — an optional on-ramp. This template
-> itself ships no package files and needs no runtime.
+```sh
+sh scripts/sync-ai-docs.sh     # regenerate the contract + every per-tool mirror
+pnpm test                      # vitest + coverage (>= 80%, blocking pre-commit)
+pnpm exec tsc --noEmit
+pnpm exec biome check
+pnpm test:graph                # task-graph validator self-test
+```
 
-It works because the template has a single source of truth: only `.ai/context.md` is
-project-specific. The updater refreshes the **generic** half — `.ai/pipeline.md`, commands,
-agents, skills, references, `.ai/templates/`, the sync machinery, and the dispatcher hooks —
-then re-runs the sync. It **preserves** your project files (`.ai/context.md`, your `.ai/specs/`,
-`scripts/opencode-model-routing.sh`, your `.githooks/*.d/` language hooks, `.gitignore`,
-`.gitattributes`) and saves the template's new contract as `.ai/context.md.incoming` for you to
-reconcile. It never deletes downstream-only commands (they're reported, not removed) and **never
-pushes**.
+The pre-commit hook (`git config core.hooksPath .githooks`, done by `install.sh`) runs the sync
+drift gate, the mirror-tracking guard, Biome, the test suite, and typecheck. Post-commit reporting
+is advisory by design; the blocking checks are pre-commit.
 
-Useful flags: `--dry-run` (preview), `--ref <branch|tag>` (pin a version), `--with-tooling`
-(also refresh `.mcp.json` / `opencode.json` / `.codex/` / `.agents/`, off by default), `--force`
-(allow a dirty tree). The one fuzzy step — merging new conventions into a customized
-`.ai/context.md` — is best handed to the **`/update-from-template`** slash command, which does
-that judgment merge in any of the supported CLIs.
+Per-stage model routing is available for the opencode runtime — add a `model:` key to a command or
+persona's frontmatter. Keep the committed `.ai/` sources vendor-neutral; routing is an opt-in each
+project sets locally (`scripts/opencode-model-routing.sh`).
 
-## 🪝 Commit hooks (language-specific)
+## 🧊 Legacy CLI (v0) — shipped, frozen
 
-The template's hooks are **agnostic dispatchers**: `pre-commit` runs the sync drift gate then
-every executable in `.githooks/pre-commit.d/`; `post-commit` runs every executable in
-`.githooks/post-commit.d/`. The template ships those `.d/` dirs **empty**. Run **`/bootstrap`**
-and it writes your language's checks into them — `gofmt`/`go vet`/`go test`, `prettier`/`eslint`/
-`tsc`/`npm test`, `ruff`/`black`/`mypy`/`pytest`, `cargo fmt`/`clippy`/`test`, etc. — using the
-exact Definition-of-Done commands from your contract. Nothing language-specific ever touches the
-dispatcher hooks or the sync script, so the core stays drop-in for any stack.
+`src/**` is a working single-user, Spain-only local-first CLI: Node 22 · pnpm · better-sqlite3 ·
+opentui · local LLM CLI subprocesses. Epics A1 and B0–B7 are complete and green (~2,900 source LOC,
+~2,450 test LOC).
 
-## 🗓️ Daily bill scan via cron (tax-agent)
+**It is frozen — do not extend it, do not migrate it in place.** It is kept because it works, it is
+tested, and it is the reference implementation for integer-cents money and rule-id provenance. Phase
+6 ports its durable assets (`src/countries/es/rules.ts`, the integer-cents model, the
+`figure(label, cents, ruleIds)` pattern) into the new jurisdiction plugin; the legacy tree retires
+only once that port is verified.
 
-`tax-agent scan` runs one headless pass: it asks your **local** agent CLI (`claude -p` / `codex exec`,
-whichever you're subscribed to) to search Gmail for new billing emails, verifies every amount against
-the email text (nothing is ever fabricated), writes one Markdown file per bill under
-`~/Downloads/tax-agent/YYYY-MM/`, and records it in the local SQLite DB. It is idempotent — already-seen
-emails are skipped — so running it daily is safe. Exit codes: **0** clean · **2** completed with some
-per-item failures · **1** fatal (no profile, or the CLI binary/config is wrong; re-run with `DEBUG=1`).
+<details>
+<summary>Running the legacy CLI</summary>
 
-Prerequisites: run the interview once (`pnpm dev`) so a profile exists, and have your agent CLI logged
-in with a Gmail MCP configured. Config via env (all optional): `TAX_AGENT_LLM=claude|codex` (default
-`claude`), `TAX_AGENT_LLM_MODEL`, `TAX_AGENT_LLM_EFFORT`, `TAX_AGENT_LLM_BIN` (absolute path to the CLI),
+`pnpm dev` runs the opentui interview once so a profile exists. `tax-agent scan` then runs one
+headless pass: it asks your **local** agent CLI (`claude -p` / `codex exec`) to search Gmail for new
+billing emails, verifies every amount against the email text (nothing is ever fabricated), writes one
+Markdown file per bill under `~/Downloads/tax-agent/YYYY-MM/`, and records it in local SQLite. It is
+idempotent — already-seen emails are skipped. Exit codes: **0** clean · **2** completed with
+per-item failures · **1** fatal (re-run with `DEBUG=1`).
+
+Config via env, all optional: `TAX_AGENT_LLM=claude|codex` (default `claude`),
+`TAX_AGENT_LLM_MODEL`, `TAX_AGENT_LLM_EFFORT`, `TAX_AGENT_LLM_BIN` (absolute path to the CLI),
 `TAX_AGENT_DOWNLOADS_DIR` (override the output root).
 
-### Install the cron job (you do this once — agents never touch your crontab)
+**Daily cron** (you install this once — agents never touch your crontab):
 
 ```sh
-mkdir -p data/logs && chmod 700 data/logs   # log dir (gitignored); cron opens this file, so it must exist first
-crontab -e                                    # add the line below (paths are absolute)
+mkdir -p data/logs && chmod 700 data/logs   # cron opens this file, so it must exist first
+crontab -e
 ```
 
 ```cron
-15 8 * * * /bin/sh /Users/ogarcia/projects/ogarciarevett/tax-agent/scripts/cron-scan.sh >> /Users/ogarcia/projects/ogarciarevett/tax-agent/data/logs/cron.log 2>&1
+15 8 * * * /bin/sh /absolute/path/to/tax-agent/scripts/cron-scan.sh >> /absolute/path/to/tax-agent/data/logs/cron.log 2>&1
 ```
 
 `scripts/cron-scan.sh` exists because cron runs with an almost-empty environment: it pins `PATH` to
-the nvm node bin that `better-sqlite3` was built against (which also holds `claude`), `~/.bun/bin`
-(`codex`), and `/opt/homebrew/bin` before `exec`-ing the scan, then lets the exit code flow into
-`cron.log`. Logs contain only counts, gmail message ids, row ids, reason codes, and durations —
+the nvm node bin that `better-sqlite3` was built against, `~/.bun/bin`, and `/opt/homebrew/bin`
+before `exec`-ing the scan. Logs contain only counts, message ids, reason codes and durations —
 **never** a vendor, subject, or amount.
 
-### macOS: grant cron Full Disk Access
+**macOS:** TCC blocks `cron` from writing to `~/Downloads` until you grant **Full Disk Access** to
+`/usr/sbin/cron` (System Settings → Privacy & Security → Full Disk Access → **+** → ⌘⇧G →
+`/usr/sbin/cron`). If you'd rather not, set `TAX_AGENT_DOWNLOADS_DIR` to a path cron can write, e.g.
+the repo-local `data/bills` (gitignored, `0700`).
 
-macOS TCC blocks `cron` from writing to `~/Downloads` until you allow it. Open **System Settings →
-Privacy & Security → Full Disk Access**, click **+**, press **⌘⇧G**, enter `/usr/sbin/cron`, and enable
-it. If you'd rather not grant it, set `TAX_AGENT_DOWNLOADS_DIR` to an absolute path the cron user can
-write — e.g. the repo-local `data/bills` (gitignored, `0700`):
+Known limits at freeze: expense-side estimates only (no income ingestion, so no full Modelo
+303/130) · extracted Markdown rather than original PDFs for some sources · no RAG · no OCR · no
+filing · single user.
 
-```cron
-15 8 * * * TAX_AGENT_DOWNLOADS_DIR=/Users/ogarcia/projects/ogarciarevett/tax-agent/data/bills /bin/sh /Users/ogarcia/projects/ogarciarevett/tax-agent/scripts/cron-scan.sh >> /Users/ogarcia/projects/ogarciarevett/tax-agent/data/logs/cron.log 2>&1
-```
+</details>
+
+## 🚫 Current non-goals
+
+- **No product implementation until the pipeline is approved.** P0 records and validates the
+  contract; it builds no application code, schema, or UI.
+- No autonomous financial action — the system recommends; a human acts.
+- No direct filing or submission to a tax authority.
+- No dedicated graph database or external vector database in the initial phases.
+- No production use of prerelease database software without explicit human approval.
+- **No pushing, PRs, remote branches, or deploys from an agent.** Commits are local; the human pushes.
+- Not professional tax advice.
+
+## 🗺️ Roadmap
+
+| Phase | Scope | Status |
+|-------|-------|--------|
+| **P0** | Pipeline V2: contract, lifecycle, task-graph schema + validator, evidence graph, loop state machines, graph/loop reviewers, four skills, ADRs, README | 🔵 self-hosting |
+| **P1** | Product bootstrap: Bun + TS7 + Next.js skeleton, Docker Compose, PostgreSQL 18/19 matrix, first migration | ⬜ awaits approval |
+| **P2** | Ledger — append-only financial facts, integer minor units, provenance, tenancy isolation | ⬜ |
+| **P3** | Document ingestion + hybrid retrieval (pgvector + benchmarked lexical ranking, RRF) | ⬜ |
+| **P4** | Financial domain graph — relationships, blockers, enablers, exposure, explanations | ⬜ |
+| **P5** | Closed loops — budgets, tax reserves, debt planning, goal dependencies, mortgage readiness | ⬜ |
+| **P6** | Jurisdiction plugins — port the legacy `es` rules; retire Legacy v0 | ⬜ |
+
+Deferred work is recorded with reasons in [`.ai/specs/98-nice-to-haves.md`](.ai/specs/98-nice-to-haves.md).
+
+## 📚 Key documents
+
+| Document | What it is |
+|----------|-----------|
+| [`.ai/context.md`](.ai/context.md) | the operating contract — stack, constraints, hard rules, honesty protocol |
+| [`.ai/pipeline.md`](.ai/pipeline.md) | Pipeline V2 stages, node state machine, command ownership |
+| [`.ai/references/task-graph-schema.md`](.ai/references/task-graph-schema.md) | task-graph schema v1.0 + readiness/parallel-safety algorithms |
+| [`.ai/references/evidence-graph.md`](.ai/references/evidence-graph.md) | what counts as evidence, and what does not |
+| [`.ai/references/loop-state-machines.md`](.ai/references/loop-state-machines.md) | states, failure paths, retry, resume, compensation |
+| [`.ai/references/orchestration-patterns.md`](.ai/references/orchestration-patterns.md) | endorsed patterns and anti-patterns for multi-agent work |
+| [`.ai/specs/00-requirements.md`](.ai/specs/00-requirements.md) | requirements + the 14 correctness constraints |
+| [`.ai/specs/01-spec.md`](.ai/specs/01-spec.md) | target architecture (+ Legacy v0 in Appendix A) |
+| [`.ai/specs/02-plan.md`](.ai/specs/02-plan.md) | task backlog and index |
+| [`docs/adr/`](docs/adr/) | 0001 pipeline · 0002 graph separation · 0003 Herdr boundary · 0004 PostgreSQL posture |
+
+## 📄 Origins & license
+
+The multi-tool contract machinery — the `.ai/` source-of-truth model, `scripts/sync-ai-docs.sh`, and
+the generated per-tool mirrors for Claude Code, Cursor, Codex, Gemini CLI and opencode — originated
+in **cross-ai-template**, and the skill catalogue derives from the
+[addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) lifecycle. Pipeline V2, the
+task-graph model and validator, the evidence graph, and the financial graph/loop/hardness skills are
+specific to this project.
+
+MIT — see [`.ai/AGENT-SKILLS-LICENSE`](.ai/AGENT-SKILLS-LICENSE).

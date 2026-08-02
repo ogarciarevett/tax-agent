@@ -1,4 +1,4 @@
-# MEMORY — <PROJECT> (local agent working log)
+# MEMORY — tax-agent (local agent working log)
 
 Per-developer, **gitignored** working log shared across the tools on your machine
 (Claude Code, Codex, Gemini, opencode). It is seeded from this template by

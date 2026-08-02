@@ -1,72 +1,56 @@
 ---
-description: Run the pre-launch checklist via parallel fan-out to specialist personas, then synthesize a go/no-go decision
+description: Stage 10 — mechanical close. Verify the tree, print status and log, and produce a ready-to-paste PR body. Never pushes, never reviews.
 ---
+
+# /ship — stage 10, SHIP PREPARATION
 
 Invoke the agent-skills:shipping-and-launch skill.
 
-`/ship` is a **fan-out orchestrator**. It runs three specialist personas in parallel against the current change, then merges their reports into a single go/no-go decision with a rollback plan. The personas operate independently — no shared state, no ordering — which is what makes parallel execution safe and useful here.
+`/ship` is **mechanical**. It does not run a reviewer panel — that is `/consensus-review` at stage 8,
+and duplicating it here would burn tokens to re-derive a verdict that already exists.
 
-## Phase A — Parallel fan-out
+**Preconditions (verify, do not assume):**
+- every node in the task graph is `VERIFIED`;
+- `/consensus-review` passed and `.ai/specs/03-review.md` records the verdict;
+- all Definition-of-Done gates are green.
 
-Spawn three subagents concurrently using the Agent tool. **Issue all three Agent tool calls in a single assistant turn so they execute in parallel** — sequential calls defeat the purpose of this command.
+## Steps
 
-In Claude Code, each call passes `subagent_type` matching the persona's `name` field:
-
-1. **`code-reviewer`** — Run a five-axis review (correctness, readability, architecture, security, performance) on the staged changes or recent commits. Output the standard review template.
-2. **`security-auditor`** — Run a vulnerability and threat-model pass. Check OWASP Top 10, secrets handling, auth/authz, dependency CVEs. Output the standard audit report.
-3. **`test-engineer`** — Analyze test coverage for the change. Identify gaps in happy path, edge cases, error paths, and concurrency scenarios. Output the standard coverage analysis.
-
-In other harnesses without an Agent tool, invoke each persona's system prompt sequentially and treat their outputs as if returned in parallel — the merge phase still works.
-
-Constraints (from Claude Code's subagent model):
-- Subagents cannot spawn other subagents — do not let one persona delegate to another.
-- Each subagent gets its own context window and returns only its report to this main session.
-- If you need teammates that talk to each other instead of just reporting back, use Claude Code Agent Teams and reference these personas as teammate types (see `references/orchestration-patterns.md`).
-
-**Persona resolution.** If you've defined your own `code-reviewer`, `security-auditor`, or `test-engineer` in `.claude/agents/` or `~/.claude/agents/`, those take precedence over this plugin's versions — `/ship` picks up your customizations automatically. This is intentional: plugin subagents sit at the bottom of Claude Code's scope priority table, so user-level definitions win by design.
-
-## Phase B — Merge in main context
-
-Once all three reports are back, the main agent (not a sub-persona) synthesizes them:
-
-1. **Code Quality** — Aggregate Critical/Important findings from `code-reviewer` and any failing tests, lint, or build output. Resolve duplicates between reviewers.
-2. **Security** — Promote any Critical/High `security-auditor` findings to launch blockers. Cross-reference with `code-reviewer`'s security axis.
-3. **Performance** — Pull from `code-reviewer`'s performance axis; cross-check Core Web Vitals if applicable.
-4. **Accessibility** — Verify keyboard nav, screen reader support, contrast (not covered by the three personas — handle directly here, or invoke the accessibility checklist).
-5. **Infrastructure** — Env vars, migrations, monitoring, feature flags. Verify directly.
-6. **Documentation** — README, ADRs, changelog. Verify directly.
-
-## Phase C — Decision and rollback
-
-Produce a single output:
+1. **Prove the gates.** Run and paste:
+   - `pnpm test` · `pnpm exec tsc --noEmit` · `pnpm exec biome check`
+   - `node scripts/validate-task-graph.mjs .ai/specs/task-graphs/<id>.json`
+   - `sh scripts/sync-ai-docs.sh` then `git diff --exit-code -- AGENTS.md CLAUDE.md GEMINI.md`
+     (generated contract in sync)
+   - `git diff --check` (no whitespace errors or conflict markers)
+2. **Confirm the commit history is atomic** — one commit per verified node, each citing its task
+   and node id. `/build` made these; `/ship` does not create content commits. If the tree is dirty
+   with report artifacts only (acceptance, review), a single final commit for those is allowed.
+3. **Print `git status --short`** (must be clean) and **`git log --oneline`** for the task's range.
+4. **Produce the PR body** — ready to paste, referencing the task graph and acceptance artifacts:
 
 ```markdown
-## Ship Decision: GO | NO-GO
+## <task-id> — <title>
 
-### Blockers (must fix before ship)
-- [Source persona: Critical finding + file:line]
+### What changed
+- <one bullet per verified node, with its node id>
 
-### Recommended fixes (should fix before ship)
-- [Source persona: Important finding + file:line]
+### Why
+<link or cite the normative spec: .ai/specs/<id>-spec.md or the external ticket>
 
-### Acknowledged risks (shipping anyway)
-- [Risk + mitigation]
+### Verification
+- Task graph: `.ai/specs/task-graphs/<id>.json` — N nodes, all VERIFIED
+- Consensus review: `.ai/specs/03-review.md` — <verdict>
+- Acceptance: `.ai/specs/99-acceptance.md` — Honest Implementation Metric NN%
+- Gates: <pasted summary lines from step 1>
 
-### Rollback plan
-- Trigger conditions: [what signals would prompt rollback]
-- Rollback procedure: [exact steps]
-- Recovery time objective: [target]
-
-### Specialist reports (full)
-- [code-reviewer report]
-- [security-auditor report]
-- [test-engineer report]
+### Risks / follow-ups
+- <deferred findings, pointing at .ai/specs/98-nice-to-haves.md>
 ```
 
-## Rules
+## Hard rules
 
-1. The three Phase A personas run in parallel — never sequentially.
-2. Personas do not call each other. The main agent merges in Phase B.
-3. The rollback plan is mandatory before any GO decision.
-4. If any persona returns a Critical finding, the default verdict is NO-GO unless the user explicitly accepts the risk.
-5. **Skip the fan-out only if all of the following are true:** the change touches 2 files or fewer, the diff is under 50 lines, and it does not touch auth, payments, data access, or config/env. Otherwise, default to fan-out. `/ship` is designed for production-bound changes — when the blast radius is non-trivial, run the parallel review even if the diff looks small.
+**NEVER push. NEVER open a PR. NEVER create a remote branch. NEVER deploy.** Commit locally; the
+human pushes. `/ship` prints the PR body for a human to paste — it does not create one.
+
+If a gate fails, `/ship` stops and reports. It does not "ship anyway with acknowledged risk" — that
+decision belongs to the human, after seeing the failing output.

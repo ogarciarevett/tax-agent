@@ -5,6 +5,10 @@ import { defineConfig } from "vitest/config";
 // else (domain, interview logic, storage, cli/args) must clear the 80% gate.
 export default defineConfig({
 	test: {
+		// Vitest owns src/. `scripts/validate-task-graph.test.mjs` is repo machinery with its own
+		// zero-dependency runner (`pnpm test:graph`); without this, vitest's default discovery picks
+		// it up and fails on its top-level `process.exit`.
+		include: ["src/**/*.test.ts"],
 		coverage: {
 			provider: "v8",
 			reporter: ["text", "text-summary"],

@@ -1,0 +1,941 @@
+{
+	"schema_version": "1.0",
+	"task_id": "P1",
+	"spec_source": ".ai/specs/P1-spec.md",
+	"goal": "Define Pipeline V2 - a graph-orchestrated, loop-engineered, evidence-gated lifecycle - and self-host it against its own bootstrap task without claiming it governed its own creation.",
+	"bootstrap_exception": true,
+	"graph_delta": {
+		"nodes_added": [
+			"P1.N1",
+			"P1.N2",
+			"P1.N3",
+			"P1.N4",
+			"P1.N5",
+			"P1.N6",
+			"P1.N7",
+			"P1.N8",
+			"P1.N9",
+			"P1.N10",
+			"P1.N11",
+			"P1.N12",
+			"P1.N13",
+			"P1.N14",
+			"P1.N15",
+			"P1.N16"
+		],
+		"nodes_modified": [],
+		"nodes_removed": [],
+		"edges_added": [
+			"N1->N2",
+			"N1->N3",
+			"N2->N4",
+			"N2->N5",
+			"N4->N5",
+			"N2->N6",
+			"N5->N6",
+			"N2->N7",
+			"N6->N8",
+			"N7->N8",
+			"N4->N9",
+			"N2->N11",
+			"N4->N11",
+			"N1->N12",
+			"N2->N12",
+			"N8->N12",
+			"N2->N13",
+			"N4->N14",
+			"N9->N14",
+			"N13->N14",
+			"N1->N15",
+			"N2->N15",
+			"N12->N15",
+			"*->N16"
+		],
+		"edges_removed": []
+	},
+	"nodes": [
+		{
+			"id": "P1.N1",
+			"title": "Rewrite .ai/context.md as the Financial Intelligence Graph operating contract",
+			"kind": "contract",
+			"status": "VERIFIED",
+			"depends_on": [],
+			"read_set": [".ai/context.md", "src/**", "package.json"],
+			"write_set": [".ai/context.md"],
+			"inputs": [".ai/specs/P1-spec.md"],
+			"outputs": [".ai/context.md"],
+			"invariants": [
+				"the contract claims no gate the repository cannot enforce",
+				"Legacy v0 is frozen, not deleted",
+				"the ledger is the source of financial truth; the graph never replaces it",
+				"RAG is never authoritative for current balances"
+			],
+			"acceptance_criteria": [
+				"AC3 AGENTS.md reflects the new contract after sync",
+				"AC9 no unresolved template placeholder remains"
+			],
+			"verification_commands": [
+				"grep -c pgvector .ai/context.md",
+				"grep -c 'PostgreSQL 19' .ai/context.md",
+				"sh scripts/sync-ai-docs.sh && git diff --cached --stat -- AGENTS.md"
+			],
+			"risk": "high",
+			"financially_material": false,
+			"side_effects": [],
+			"compensation": [],
+			"parallel_safe": null,
+			"evidence": [
+				{
+					"criterion": "AC3",
+					"command": "sh scripts/sync-ai-docs.sh && git diff --cached --stat -- AGENTS.md",
+					"output_excerpt": "AGENTS.md | 510 ++++--- ; 1 file changed, 377 insertions(+), 133 deletions(-)"
+				},
+				{
+					"criterion": "invariant: locked stack recorded (pgvector)",
+					"command": "grep -c pgvector .ai/context.md",
+					"output_excerpt": "2"
+				},
+				{
+					"criterion": "invariant: PG version posture recorded (19 dev / 18 prod)",
+					"command": "grep -c 'PostgreSQL 19' .ai/context.md",
+					"output_excerpt": "3"
+				}
+			]
+		},
+		{
+			"id": "P1.N2",
+			"title": "Rewrite .ai/pipeline.md as the 13-stage V2 lifecycle and node state machine",
+			"kind": "contract",
+			"status": "VERIFIED",
+			"depends_on": ["P1.N1"],
+			"read_set": [".ai/pipeline.md", ".ai/commands/**"],
+			"write_set": [".ai/pipeline.md"],
+			"inputs": [".ai/context.md"],
+			"outputs": [".ai/pipeline.md"],
+			"invariants": [
+				"no state may be skipped on the path to VERIFIED",
+				"failure transitions move backward, never forward",
+				"reviewer fan-out is owned by exactly one command",
+				"the memory section is appended by the sync script, never duplicated here"
+			],
+			"acceptance_criteria": [
+				"AC3 AGENTS.md reflects the new pipeline after sync",
+				"AC11 fan-out ownership is unambiguous"
+			],
+			"verification_commands": [
+				"grep -c 'RECONCILED' .ai/pipeline.md",
+				"test $(grep -c '^## Memory' .ai/pipeline.md) -eq 0",
+				"sh scripts/sync-ai-docs.sh && git diff --cached --stat -- AGENTS.md"
+			],
+			"risk": "high",
+			"financially_material": false,
+			"side_effects": [],
+			"compensation": [],
+			"parallel_safe": null,
+			"evidence": [
+				{
+					"criterion": "AC3",
+					"command": "grep -c 'RECONCILED' .ai/pipeline.md",
+					"output_excerpt": "3"
+				},
+				{
+					"criterion": "AC3",
+					"command": "grep -c '^## Memory' .ai/pipeline.md",
+					"output_excerpt": "0 (the sync script appends it; duplicating it here would double it in every generated file)"
+				},
+				{
+					"criterion": "AC11",
+					"command": "grep -c 'ONLY reviewer fan-out' .ai/commands/consensus-review.md",
+					"output_excerpt": "1"
+				}
+			]
+		},
+		{
+			"id": "P1.N3",
+			"title": "Rewrite project requirements and architecture spec for the platform, preserving Legacy v0",
+			"kind": "spec",
+			"status": "VERIFIED",
+			"depends_on": ["P1.N1"],
+			"read_set": [
+				".ai/specs/00-requirements.md",
+				".ai/specs/01-spec.md",
+				"src/**"
+			],
+			"write_set": [".ai/specs/00-requirements.md", ".ai/specs/01-spec.md"],
+			"inputs": [".ai/context.md"],
+			"outputs": [".ai/specs/00-requirements.md", ".ai/specs/01-spec.md"],
+			"invariants": [
+				"undecided design is marked Phase 1 rather than invented",
+				"the Legacy v0 architecture is preserved, not deleted",
+				"the 14 financial correctness constraints are recorded"
+			],
+			"acceptance_criteria": ["AC9 no unresolved template placeholder remains"],
+			"verification_commands": [
+				"grep -c 'C14' .ai/specs/00-requirements.md",
+				"grep -c 'Phase 1' .ai/specs/01-spec.md"
+			],
+			"risk": "medium",
+			"financially_material": false,
+			"side_effects": [],
+			"compensation": [],
+			"parallel_safe": null,
+			"evidence": [
+				{
+					"criterion": "invariant: the 14 financial correctness constraints are recorded",
+					"command": "grep -c 'C14' .ai/specs/00-requirements.md",
+					"output_excerpt": "2 (all 14 constraints C1-C14 present)"
+				},
+				{
+					"criterion": "invariant: undecided design is marked Phase 1 rather than invented",
+					"command": "grep -c 'Phase 1' .ai/specs/01-spec.md",
+					"output_excerpt": "7 (undecided design explicitly marked, not invented)"
+				}
+			]
+		},
+		{
+			"id": "P1.N4",
+			"title": "Author the task-graph schema, evidence-graph and loop-state-machine references",
+			"kind": "reference",
+			"status": "VERIFIED",
+			"depends_on": ["P1.N2"],
+			"read_set": [".ai/pipeline.md", ".ai/context.md"],
+			"write_set": [
+				".ai/references/task-graph-schema.md",
+				".ai/references/evidence-graph.md",
+				".ai/references/loop-state-machines.md"
+			],
+			"inputs": [".ai/pipeline.md"],
+			"outputs": [
+				".ai/references/task-graph-schema.md",
+				".ai/references/evidence-graph.md",
+				".ai/references/loop-state-machines.md"
+			],
+			"invariants": [
+				"the task graph may never override its normative spec",
+				"parallel_safe is derived, never authored",
+				"requirement without passing evidence is not verified",
+				"implementation without a requirement is unexplained scope"
+			],
+			"acceptance_criteria": [
+				"AC5 the schema is implementable and the validator enforces it",
+				"AC10 every new reference path exists"
+			],
+			"verification_commands": [
+				"test -f .ai/references/task-graph-schema.md",
+				"test -f .ai/references/evidence-graph.md",
+				"test -f .ai/references/loop-state-machines.md"
+			],
+			"risk": "high",
+			"financially_material": false,
+			"side_effects": [],
+			"compensation": [],
+			"parallel_safe": null,
+			"evidence": [
+				{
+					"criterion": "AC10",
+					"command": "test -f .ai/references/task-graph-schema.md && test -f .ai/references/evidence-graph.md && test -f .ai/references/loop-state-machines.md",
+					"output_excerpt": "all three exist (exit 0)"
+				},
+				{
+					"criterion": "AC5",
+					"command": "node scripts/validate-task-graph.mjs .ai/specs/task-graphs/P1.json",
+					"output_excerpt": "16 nodes, no cycles, all nodes explained and checkable - the schema is implementable"
+				}
+			]
+		},
+		{
+			"id": "P1.N5",
+			"title": "Add the /map and /reconcile commands",
+			"kind": "command",
+			"status": "VERIFIED",
+			"depends_on": ["P1.N2", "P1.N4"],
+			"read_set": [".ai/pipeline.md", ".ai/references/task-graph-schema.md"],
+			"write_set": [".ai/commands/map.md", ".ai/commands/reconcile.md"],
+			"inputs": [".ai/pipeline.md"],
+			"outputs": [".ai/commands/map.md", ".ai/commands/reconcile.md"],
+			"invariants": [
+				"each new command owns a distinct state transition or artifact",
+				"/map performs no writes"
+			],
+			"acceptance_criteria": [
+				"AC6 /reconcile detects unexplained scope",
+				"AC10 every skill and persona reference resolves"
+			],
+			"verification_commands": [
+				"test -f .ai/commands/map.md",
+				"test -f .ai/commands/reconcile.md",
+				"node scripts/validate-task-graph.mjs --reconcile .ai/specs/task-graphs/P1.json"
+			],
+			"risk": "medium",
+			"financially_material": false,
+			"side_effects": [],
+			"compensation": [],
+			"parallel_safe": null,
+			"evidence": [
+				{
+					"criterion": "AC10",
+					"command": "sh scripts/sync-ai-docs.sh",
+					"output_excerpt": "commands -> 15 x {.claude, .opencode (md), .gemini (toml)}  (13 existing + map + reconcile)"
+				},
+				{
+					"criterion": "AC6",
+					"command": "node scripts/validate-task-graph.mjs --reconcile .ai/specs/task-graphs/P1.json",
+					"output_excerpt": "UNEXPLAINED SCOPE - vitest.config.ts is in no node's write_set (exit 1) - the gate fired on a real omission and was then corrected"
+				}
+			]
+		},
+		{
+			"id": "P1.N6",
+			"title": "Update the ten existing commands; resolve fan-out, commit and build/test ownership",
+			"kind": "command",
+			"status": "VERIFIED",
+			"depends_on": ["P1.N2", "P1.N5"],
+			"read_set": [".ai/commands/**", ".ai/pipeline.md"],
+			"write_set": [
+				".ai/commands/spec.md",
+				".ai/commands/plan.md",
+				".ai/commands/build.md",
+				".ai/commands/test.md",
+				".ai/commands/review.md",
+				".ai/commands/consensus-review.md",
+				".ai/commands/code-simplify.md",
+				".ai/commands/ship.md",
+				".ai/commands/acceptance.md",
+				".ai/commands/evolve.md"
+			],
+			"inputs": [
+				".ai/pipeline.md",
+				".ai/commands/map.md",
+				".ai/commands/reconcile.md"
+			],
+			"outputs": [".ai/commands/spec.md", ".ai/commands/ship.md"],
+			"invariants": [
+				"exactly one command owns reviewer fan-out",
+				"exactly one command owns committing",
+				"/build owns node-local RED/GREEN; /test owns subgraph integration",
+				"/ship never pushes, opens a PR, or deploys"
+			],
+			"acceptance_criteria": [
+				"AC11 /ship and /consensus-review no longer contradict each other",
+				"AC10 every agent-skills reference resolves to an existing SKILL.md"
+			],
+			"verification_commands": [
+				"test $(grep -c 'fan-out orchestrator' .ai/commands/ship.md) -eq 0",
+				"grep -c 'ONLY reviewer fan-out' .ai/commands/consensus-review.md",
+				"git grep -oh 'agent-skills:[a-z-]*' .ai/commands/ | sort -u"
+			],
+			"risk": "high",
+			"financially_material": false,
+			"side_effects": [],
+			"compensation": [],
+			"parallel_safe": null,
+			"evidence": [
+				{
+					"criterion": "AC11",
+					"command": "grep -c 'fan-out orchestrator' .ai/commands/ship.md",
+					"output_excerpt": "0 (was the source of the D1 contradiction)"
+				},
+				{
+					"criterion": "AC11",
+					"command": "grep -c 'ONLY reviewer fan-out' .ai/commands/consensus-review.md",
+					"output_excerpt": "1"
+				},
+				{
+					"criterion": "AC10",
+					"command": "for s in $(git grep -oh 'agent-skills:[a-z-]*' .ai/commands/ | sed 's/agent-skills://' | sort -u); do test -f \".ai/skills/$s/SKILL.md\"; done",
+					"output_excerpt": "all 10 referenced skills resolve: browser-testing-with-devtools, code-review-and-quality, code-simplification, debugging-and-error-recovery, incremental-implementation, planning-and-task-breakdown, project-bootstrap, shipping-and-launch, spec-driven-development, test-driven-development"
+				}
+			]
+		},
+		{
+			"id": "P1.N7",
+			"title": "Add the graph-consistency-reviewer and loop-correctness-reviewer personas",
+			"kind": "persona",
+			"status": "VERIFIED",
+			"depends_on": ["P1.N2"],
+			"read_set": [".ai/agents/**", ".ai/references/loop-state-machines.md"],
+			"write_set": [
+				".ai/agents/graph-consistency-reviewer.md",
+				".ai/agents/loop-correctness-reviewer.md"
+			],
+			"inputs": [".ai/pipeline.md"],
+			"outputs": [
+				".ai/agents/graph-consistency-reviewer.md",
+				".ai/agents/loop-correctness-reviewer.md"
+			],
+			"invariants": [
+				"a persona is a single role and does not invoke another persona",
+				"personas are read-only"
+			],
+			"acceptance_criteria": [
+				"AC10 every persona referenced by the consensus matrix exists"
+			],
+			"verification_commands": [
+				"test -f .ai/agents/graph-consistency-reviewer.md",
+				"test -f .ai/agents/loop-correctness-reviewer.md",
+				"grep -c 'Composition' .ai/agents/loop-correctness-reviewer.md"
+			],
+			"risk": "medium",
+			"financially_material": false,
+			"side_effects": [],
+			"compensation": [],
+			"parallel_safe": null,
+			"evidence": [
+				{
+					"criterion": "AC10",
+					"command": "for p in code-reviewer security-auditor performance-reviewer test-engineer graph-consistency-reviewer loop-correctness-reviewer; do test -f \".ai/agents/$p.md\"; done",
+					"output_excerpt": "all 6 exist; financial-domain-reviewer / ledger-invariant-reviewer are declared-but-deferred by design"
+				},
+				{
+					"criterion": "AC10",
+					"command": "sh scripts/sync-ai-docs.sh",
+					"output_excerpt": "agents -> 6 x {.claude, .opencode, .gemini}  (4 existing + 2 new)"
+				}
+			]
+		},
+		{
+			"id": "P1.N8",
+			"title": "Fix the orchestration docs: false plugin claim, fan-out owner, panel roster, Herdr boundary",
+			"kind": "doc",
+			"status": "VERIFIED",
+			"depends_on": ["P1.N6", "P1.N7"],
+			"read_set": [
+				".ai/agents/README.md",
+				".ai/references/orchestration-patterns.md",
+				".ai/commands/**"
+			],
+			"write_set": [
+				".ai/agents/README.md",
+				".ai/references/orchestration-patterns.md"
+			],
+			"inputs": [
+				".ai/commands/consensus-review.md",
+				".ai/agents/graph-consistency-reviewer.md"
+			],
+			"outputs": [
+				".ai/agents/README.md",
+				".ai/references/orchestration-patterns.md"
+			],
+			"invariants": [
+				"no document claims a .claude-plugin/plugin.json that does not exist",
+				"every document names /consensus-review as the fan-out owner",
+				"agent status is documented as visibility, not proof"
+			],
+			"acceptance_criteria": [
+				"AC11 orchestration docs agree with the commands"
+			],
+			"verification_commands": [
+				"git grep -c '\\.claude-plugin/plugin\\.json' -- .ai/ | wc -l",
+				"grep -c 'only fan-out command' .ai/references/orchestration-patterns.md"
+			],
+			"risk": "medium",
+			"financially_material": false,
+			"side_effects": [],
+			"compensation": [],
+			"parallel_safe": null,
+			"evidence": [
+				{
+					"criterion": "AC11",
+					"command": "git grep -c '\\.claude-plugin/plugin\\.json' -- .ai/ | wc -l",
+					"output_excerpt": "0 (the false claim at orchestration-patterns.md:123 and agents/README.md:108 is gone; .claude-plugin/plugin.json never existed)"
+				},
+				{
+					"criterion": "AC11",
+					"command": "grep -c 'only fan-out command' .ai/references/orchestration-patterns.md",
+					"output_excerpt": "1 - names /consensus-review, matching pipeline.md and consensus-review.md"
+				}
+			]
+		},
+		{
+			"id": "P1.N9",
+			"title": "Write the zero-dependency task-graph validator and its self-test",
+			"kind": "script",
+			"status": "VERIFIED",
+			"depends_on": ["P1.N4"],
+			"read_set": [".ai/references/task-graph-schema.md"],
+			"write_set": [
+				"scripts/validate-task-graph.mjs",
+				"scripts/validate-task-graph.test.mjs",
+				"vitest.config.ts"
+			],
+			"inputs": [".ai/references/task-graph-schema.md"],
+			"outputs": ["scripts/validate-task-graph.mjs"],
+			"invariants": [
+				"zero runtime dependencies",
+				"non-zero exit on any violation",
+				"stores no state, schedules nothing, executes no nodes",
+				"glob overlap detection errs toward reporting overlap"
+			],
+			"acceptance_criteria": [
+				"AC4 the self-test proves detection of a cycle, an evidence-free VERIFIED node, and a write-set overlap",
+				"AC5 the validator passes on P1.json",
+				"AC16 pnpm test stays green with the standalone .mjs self-test present (Amendment A2)"
+			],
+			"verification_commands": [
+				"node scripts/validate-task-graph.test.mjs",
+				"node scripts/validate-task-graph.mjs .ai/specs/task-graphs/P1.json",
+				"pnpm test"
+			],
+			"risk": "high",
+			"financially_material": false,
+			"side_effects": [],
+			"compensation": [],
+			"parallel_safe": null,
+			"evidence": [
+				{
+					"criterion": "AC4",
+					"command": "node scripts/validate-task-graph.test.mjs",
+					"output_excerpt": "40 passed, 0 failed - incl. 'AC1: a dependency cycle is detected', 'AC2: VERIFIED without evidence is rejected', 'AC3: independent nodes with overlapping write sets are flagged'"
+				},
+				{
+					"criterion": "AC5",
+					"command": "node scripts/validate-task-graph.mjs .ai/specs/task-graphs/P1.json",
+					"output_excerpt": "16 nodes, no cycles, all nodes explained and checkable (exit 0)"
+				},
+				{
+					"criterion": "AC16",
+					"command": "pnpm test",
+					"output_excerpt": "Test Files 16 passed (16); Tests 190 passed | 1 skipped (191). Before scoping vitest to src/, its default discovery ran the .mjs self-test and failed on its top-level process.exit."
+				}
+			]
+		},
+		{
+			"id": "P1.N10",
+			"title": "Add the blocking pre-commit test gate and the graph npm scripts",
+			"kind": "script",
+			"status": "VERIFIED",
+			"depends_on": [],
+			"read_set": [
+				".githooks/pre-commit.d/**",
+				".githooks/post-commit.d/**",
+				"package.json"
+			],
+			"write_set": [".githooks/pre-commit.d/20-test.sh", "package.json"],
+			"inputs": [],
+			"outputs": [".githooks/pre-commit.d/20-test.sh"],
+			"invariants": [
+				"the gate blocks on test failure rather than reporting",
+				"it self-skips before the app is scaffolded, matching the sibling hooks",
+				"no dependency is added to package.json"
+			],
+			"acceptance_criteria": [
+				"AC12 a blocking pre-commit test gate exists and is syntactically valid"
+			],
+			"verification_commands": [
+				"sh -n .githooks/pre-commit.d/20-test.sh",
+				"test -x .githooks/pre-commit.d/20-test.sh"
+			],
+			"risk": "medium",
+			"financially_material": false,
+			"side_effects": ["changes what a local git commit executes"],
+			"compensation": [
+				"rm .githooks/pre-commit.d/20-test.sh restores the previous commit behavior"
+			],
+			"parallel_safe": null,
+			"evidence": [
+				{
+					"criterion": "AC12",
+					"command": "sh -n .githooks/pre-commit.d/20-test.sh && test -x .githooks/pre-commit.d/20-test.sh",
+					"output_excerpt": "syntax OK; -rwxr-xr-x 20-test.sh"
+				},
+				{
+					"criterion": "AC12",
+					"command": "sed -i '' 's/branches: 80/branches: 99/' vitest.config.ts && pnpm test",
+					"output_excerpt": "ERROR: Coverage for branches (90.03%) does not meet global threshold (99%) - PROVES the gate can actually fail, then reverted. Before this node, tests ran only post-commit where the failure was swallowed by `|| echo` + `exit 0`, with no CI."
+				}
+			]
+		},
+		{
+			"id": "P1.N11",
+			"title": "Author the four graph/loop/hardness skills and make evolve graph-aware",
+			"kind": "skill",
+			"status": "VERIFIED",
+			"depends_on": ["P1.N2", "P1.N4"],
+			"read_set": [".ai/skills/**", ".ai/references/**"],
+			"write_set": [
+				".ai/skills/graph-orchestrated-delivery/SKILL.md",
+				".ai/skills/financial-loop-engineering/SKILL.md",
+				".ai/skills/financial-graph-engineering/SKILL.md",
+				".ai/skills/financial-hardness-engineering/SKILL.md",
+				".ai/skills/evolve/SKILL.md"
+			],
+			"inputs": [
+				".ai/references/task-graph-schema.md",
+				".ai/references/loop-state-machines.md"
+			],
+			"outputs": [".ai/skills/graph-orchestrated-delivery/SKILL.md"],
+			"invariants": [
+				"each skill has triggers, non-goals, inputs, terminology, procedure, invariants, mandatory tests, evidence, failure modes, recovery, output format, worked example, command integration and evolve integration",
+				"no empty placeholder skill is created",
+				"the extended section set is a documented deviation from the house template"
+			],
+			"acceptance_criteria": [
+				"AC10 every skill referenced by a command exists"
+			],
+			"verification_commands": [
+				"test -f .ai/skills/graph-orchestrated-delivery/SKILL.md",
+				"test -f .ai/skills/financial-hardness-engineering/SKILL.md",
+				"grep -c '## Recovery' .ai/skills/financial-loop-engineering/SKILL.md"
+			],
+			"risk": "medium",
+			"financially_material": false,
+			"side_effects": [],
+			"compensation": [],
+			"parallel_safe": null,
+			"evidence": [
+				{
+					"criterion": "AC10",
+					"command": "sh scripts/sync-ai-docs.sh",
+					"output_excerpt": "skills -> 31 x {.claude/skills, .gemini/skills}  (27 existing + 4 new)"
+				},
+				{
+					"criterion": "AC10",
+					"command": "ls .claude/skills/ | grep -cE 'graph-orchestrated-delivery|financial-(loop|graph|hardness)-engineering'",
+					"output_excerpt": "4 - all four new skills reached the generated mirror, not just .ai/"
+				}
+			]
+		},
+		{
+			"id": "P1.N12",
+			"title": "Write ADRs 0001-0004",
+			"kind": "adr",
+			"status": "VERIFIED",
+			"depends_on": ["P1.N1", "P1.N2", "P1.N8"],
+			"read_set": [
+				".ai/context.md",
+				".ai/pipeline.md",
+				".ai/references/orchestration-patterns.md"
+			],
+			"write_set": ["docs/adr/*.md"],
+			"inputs": [".ai/context.md"],
+			"outputs": ["docs/adr/0001-graph-orchestrated-loop-pipeline.md"],
+			"invariants": [
+				"no ADR describes a prerelease database as production-ready",
+				"each ADR records the alternatives that were rejected and why",
+				"verified facts carry their date and source"
+			],
+			"acceptance_criteria": [
+				"AC10 every ADR path referenced by the contract exists"
+			],
+			"verification_commands": [
+				"ls docs/adr/",
+				"grep -c 'Beta 2' docs/adr/0004-postgresql-19-version-posture.md"
+			],
+			"risk": "medium",
+			"financially_material": false,
+			"side_effects": [],
+			"compensation": [],
+			"parallel_safe": null,
+			"evidence": [
+				{
+					"criterion": "AC10",
+					"command": "ls docs/adr/",
+					"output_excerpt": "0001-graph-orchestrated-loop-pipeline.md  0002-graph-source-of-truth-separation.md  0003-herdr-orchestration-boundary.md  0004-postgresql-19-version-posture.md"
+				},
+				{
+					"criterion": "AC10",
+					"command": "firecrawl scrape https://www.postgresql.org/support/versioning/",
+					"output_excerpt": "'July 16, 2026: PostgreSQL 19 Beta 2 Released!' - ADR 0004's central fact was verified against the source, not assumed"
+				}
+			]
+		},
+		{
+			"id": "P1.N13",
+			"title": "Update the specs scaffolding and repo hygiene: backlog index, task-spec template, deferred backlog, memory example, PII gitignore",
+			"kind": "spec",
+			"status": "VERIFIED",
+			"depends_on": ["P1.N2"],
+			"read_set": [".ai/specs/**", ".ai/memory.example.md", ".gitignore"],
+			"write_set": [
+				".ai/specs/02-plan.md",
+				".ai/specs/_task-spec.template.md",
+				".ai/specs/98-nice-to-haves.md",
+				".ai/memory.example.md",
+				".gitignore"
+			],
+			"inputs": [".ai/pipeline.md"],
+			"outputs": [".ai/specs/02-plan.md", ".ai/specs/_task-spec.template.md"],
+			"invariants": [
+				"deferred work is recorded with a reason, not silently dropped",
+				"the backlog states how its source was detected",
+				"no unresolved placeholder remains in a committed file",
+				"no PII or tax document can be committed"
+			],
+			"acceptance_criteria": [
+				"AC9 no unresolved template placeholder remains in a committed contract file",
+				"AC15 no untracked PII path is committable (GRAPH_DRIFT amendment, see P1-spec)"
+			],
+			"verification_commands": [
+				"test $(grep -c '<PROJECT>' .ai/memory.example.md) -eq 0",
+				"grep -c 'P1' .ai/specs/02-plan.md",
+				"grep -c 'Invariants' .ai/specs/_task-spec.template.md",
+				"git check-ignore -v tmp/pdfs/renta-pago.txt"
+			],
+			"risk": "low",
+			"financially_material": false,
+			"side_effects": [],
+			"compensation": [],
+			"parallel_safe": null,
+			"evidence": [
+				{
+					"criterion": "AC9",
+					"command": "grep -c '<PROJECT>' .ai/memory.example.md",
+					"output_excerpt": "0 (was '# MEMORY - <PROJECT>' at line 1 - an unresolved placeholder in a committed file)"
+				},
+				{
+					"criterion": "AC9",
+					"command": "grep -c 'Invariants' .ai/specs/_task-spec.template.md",
+					"output_excerpt": "1 - the template now demands invariants, tenancy, data classification, graph delta and blast radius"
+				},
+				{
+					"criterion": "AC15",
+					"command": "git check-ignore -v tmp/pdfs/renta-pago.txt",
+					"output_excerpt": ".gitignore:25:tmp/\ttmp/pdfs/renta-pago.txt - previously NOT ignored. tmp/pdfs/ held 10 Spanish income-tax payment files (renta-pago*.png/.txt, 2026-07-22), untracked and unignored since before this task, i.e. one `git add -A` from being committed in violation of the hard rule that PII never enters git. Surfaced by `node scripts/validate-task-graph.mjs --reconcile` after the -uall fix. Files were NOT deleted, only ignored."
+				}
+			]
+		},
+		{
+			"id": "P1.N14",
+			"title": "Author the P1 spec and its compiled task graph (the self-hosting artifact)",
+			"kind": "spec",
+			"status": "VERIFIED",
+			"depends_on": ["P1.N4", "P1.N9", "P1.N13"],
+			"read_set": [
+				".ai/references/task-graph-schema.md",
+				"scripts/validate-task-graph.mjs"
+			],
+			"write_set": [".ai/specs/P1-spec.md", ".ai/specs/task-graphs/P1.json"],
+			"inputs": [
+				".ai/references/task-graph-schema.md",
+				"scripts/validate-task-graph.mjs"
+			],
+			"outputs": [".ai/specs/task-graphs/P1.json"],
+			"invariants": [
+				"bootstrap_exception is true - the graph does not claim to have governed its own creation",
+				"every node links to an acceptance criterion or an invariant",
+				"no node claims VERIFIED without evidence",
+				"the union of write sets covers every file this task changes"
+			],
+			"acceptance_criteria": [
+				"AC5 the validator passes on P1.json",
+				"AC6 reconcile reports no unexplained scope"
+			],
+			"verification_commands": [
+				"node scripts/validate-task-graph.mjs .ai/specs/task-graphs/P1.json",
+				"node scripts/validate-task-graph.mjs --ready .ai/specs/task-graphs/P1.json",
+				"node scripts/validate-task-graph.mjs --reconcile .ai/specs/task-graphs/P1.json"
+			],
+			"risk": "high",
+			"financially_material": false,
+			"side_effects": [],
+			"compensation": [],
+			"parallel_safe": null,
+			"evidence": [
+				{
+					"criterion": "AC5",
+					"command": "node scripts/validate-task-graph.mjs .ai/specs/task-graphs/P1.json",
+					"output_excerpt": "16 nodes, no cycles, all nodes explained and checkable (exit 0)"
+				},
+				{
+					"criterion": "AC5",
+					"command": "node scripts/validate-task-graph.mjs --ready .ai/specs/task-graphs/P1.json",
+					"output_excerpt": "critical path: P1.N1 -> P1.N2 -> P1.N4 -> P1.N5 -> P1.N6 -> P1.N8 -> P1.N12 -> P1.N15 -> P1.N16 (matches the declared critical_path exactly)"
+				}
+			]
+		},
+		{
+			"id": "P1.N15",
+			"title": "Rewrite README.md to represent the actual project",
+			"kind": "doc",
+			"status": "VERIFIED",
+			"depends_on": ["P1.N1", "P1.N2", "P1.N12"],
+			"read_set": [
+				"README.md",
+				".ai/context.md",
+				".ai/pipeline.md",
+				"docs/adr/*.md"
+			],
+			"write_set": ["README.md"],
+			"inputs": [
+				".ai/context.md",
+				"docs/adr/0001-graph-orchestrated-loop-pipeline.md"
+			],
+			"outputs": ["README.md"],
+			"invariants": [
+				"no fake screenshots, benchmarks, or completion claims",
+				"it states plainly that the platform is not implemented",
+				"attribution and licensing material is preserved"
+			],
+			"acceptance_criteria": [
+				"AC9 no unresolved template placeholder remains in a committed contract file"
+			],
+			"verification_commands": [
+				"test $(grep -c '^# cross-ai-template' README.md) -eq 0",
+				"grep -c 'NOT implemented' README.md"
+			],
+			"risk": "low",
+			"financially_material": false,
+			"side_effects": [],
+			"compensation": [],
+			"parallel_safe": null,
+			"evidence": [
+				{
+					"criterion": "invariant: attribution preserved; project identity is tax-agent",
+					"command": "grep -c '^# cross-ai-template' README.md",
+					"output_excerpt": "0 (the H1 and the CROSS-AI figlet logo are gone; the H1 is now 'tax-agent')"
+				},
+				{
+					"criterion": "invariant: it states plainly that the platform is not implemented",
+					"command": "grep -n 'NOT implemented' README.md",
+					"output_excerpt": "the status section states plainly that the platform is not implemented; attribution to cross-ai-template and addyosmani/agent-skills plus the MIT license pointer are preserved"
+				}
+			]
+		},
+		{
+			"id": "P1.N16",
+			"title": "Sync, self-host, verify all gates, consensus review, acceptance, local commit",
+			"kind": "test",
+			"status": "VERIFIED",
+			"depends_on": [
+				"P1.N1",
+				"P1.N2",
+				"P1.N3",
+				"P1.N4",
+				"P1.N5",
+				"P1.N6",
+				"P1.N7",
+				"P1.N8",
+				"P1.N9",
+				"P1.N10",
+				"P1.N11",
+				"P1.N12",
+				"P1.N13",
+				"P1.N14",
+				"P1.N15"
+			],
+			"read_set": ["**"],
+			"write_set": [
+				".ai/specs/03-review.md",
+				".ai/specs/99-acceptance.md",
+				".ai/specs/task-graphs/P1.json",
+				"AGENTS.md",
+				"CLAUDE.md",
+				"GEMINI.md"
+			],
+			"inputs": [".ai/specs/task-graphs/P1.json"],
+			"outputs": [".ai/specs/99-acceptance.md", "AGENTS.md"],
+			"invariants": [
+				"the sync is idempotent - a second run produces no further change",
+				"generated files change only as a consequence of .ai/ changes",
+				"src/** is unchanged - no product code was created",
+				"nothing is pushed",
+				"no criterion is marked verified without pasted evidence"
+			],
+			"acceptance_criteria": [
+				"AC1 sh -n exits 0",
+				"AC2 sync is idempotent",
+				"AC3 generated contract reflects the sources and was not hand-edited",
+				"AC6 reconcile reports no unexplained scope",
+				"AC7 the Legacy CLI stays green",
+				"AC8 git diff --name-status -- src/ is empty",
+				"AC13 tree clean, commits local only",
+				"AC14 acceptance carries a complete evidence path per criterion"
+			],
+			"verification_commands": [
+				"sh -n scripts/sync-ai-docs.sh",
+				"sh scripts/sync-ai-docs.sh && git diff --exit-code -- AGENTS.md CLAUDE.md GEMINI.md",
+				"node scripts/validate-task-graph.mjs --reconcile .ai/specs/task-graphs/P1.json",
+				"pnpm test",
+				"pnpm exec tsc --noEmit",
+				"pnpm exec biome check",
+				"git diff --name-status -- src/",
+				"git diff --check",
+				"git status --short"
+			],
+			"risk": "critical",
+			"financially_material": false,
+			"side_effects": [
+				"creates local git commits (no push)",
+				"sh scripts/sync-ai-docs.sh regenerates the gitignored per-tool mirrors (.claude/, .gemini/, .opencode/, .cursor/, .ai/generated/) - these survive git reset and git checkout",
+				"sh scripts/sync-ai-docs.sh seeds .ai/memory.md from .ai/memory.example.md if absent - also survives git reset"
+			],
+			"compensation": [
+				"git reset --soft <pre-task-commit> (record the SHA before the first commit; nothing is pushed, so no remote cleanup is needed)",
+				"rm -rf .claude/commands .claude/agents .claude/skills .gemini .opencode/commands .opencode/agents .ai/generated .cursor/rules/00-context.mdc, then re-run sh scripts/sync-ai-docs.sh to rebuild from whatever .ai/ state you reset to",
+				"rm .ai/memory.md to undo the seeding (it is gitignored and per-developer; back it up first if it has real entries)"
+			],
+			"parallel_safe": null,
+			"evidence": [
+				{
+					"criterion": "AC1",
+					"command": "sh -n scripts/sync-ai-docs.sh",
+					"output_excerpt": "exit 0, no output"
+				},
+				{
+					"criterion": "AC2",
+					"command": "sh scripts/sync-ai-docs.sh (x2) && shasum AGENTS.md",
+					"output_excerpt": "cc37eab... identical across both runs; second sync introduced no change"
+				},
+				{
+					"criterion": "AC3",
+					"command": "sh scripts/sync-ai-docs.sh && git diff --exit-code -- AGENTS.md CLAUDE.md GEMINI.md",
+					"output_excerpt": "exit 0 - generated contract in sync with .ai/; commands 15, agents 6, skills 31"
+				},
+				{
+					"criterion": "AC6",
+					"command": "node scripts/validate-task-graph.mjs --reconcile .ai/specs/task-graphs/P1.json",
+					"output_excerpt": "scope: whole graph - 46 changed file(s); no unexplained scope"
+				},
+				{
+					"criterion": "AC7",
+					"command": "pnpm test && pnpm exec tsc --noEmit && pnpm exec biome check",
+					"output_excerpt": "Test Files 16 passed (16); Tests 190 passed | 1 skipped (191); Statements 98.33%; tsc exit 0; biome 54 files no fixes"
+				},
+				{
+					"criterion": "AC8",
+					"command": "git diff --name-status -- src/",
+					"output_excerpt": "(empty) - no product code created"
+				},
+				{
+					"criterion": "AC13",
+					"command": "git diff --check && git status --short",
+					"output_excerpt": "no whitespace errors; tree clean after commit; nothing pushed"
+				},
+				{
+					"criterion": "AC14",
+					"command": "cat .ai/specs/99-acceptance.md",
+					"output_excerpt": "16-row requirement matrix + invariant rows + Unverified + Could-not-do + 5 bootstrap exceptions; Honest Implementation Metric 93.75%"
+				},
+				{
+					"criterion": "invariant: consensus panel approved",
+					"command": "cat .ai/specs/03-review.md",
+					"output_excerpt": "4 mandatory reviewers; 8 Critical + 3 High findings all fixed with regression tests; self-test 40 -> 74"
+				}
+			]
+		}
+	],
+	"critical_path": [
+		"P1.N1",
+		"P1.N2",
+		"P1.N4",
+		"P1.N5",
+		"P1.N6",
+		"P1.N8",
+		"P1.N12",
+		"P1.N15",
+		"P1.N16"
+	],
+	"global_gates": [
+		"sh -n scripts/sync-ai-docs.sh",
+		"sh scripts/sync-ai-docs.sh (twice, to prove idempotence)",
+		"node scripts/validate-task-graph.test.mjs",
+		"node scripts/validate-task-graph.mjs .ai/specs/task-graphs/P1.json",
+		"node scripts/validate-task-graph.mjs --reconcile .ai/specs/task-graphs/P1.json",
+		"pnpm exec tsc --noEmit",
+		"pnpm exec biome check",
+		"pnpm test",
+		"git diff --check",
+		"git status --short"
+	],
+	"open_questions": []
+}

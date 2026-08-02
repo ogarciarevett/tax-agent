@@ -6,6 +6,10 @@
 .env
 .env.*
 !.env.example
+*.pem
+*.key
+*.p12
+*.pfx
 
 # --- Node / TypeScript (added by /bootstrap) ---
 node_modules/
@@ -20,6 +24,9 @@ data/
 *.sqlite
 *.sqlite-*
 *.db
+# Scratch working dir. Found holding extracted tax-payment documents (PII) while untracked and
+# unignored — i.e. one `git add -A` from being committed. Surfaced by `/reconcile` during P1.
+tmp/
 
 # Generated per-tool agent mirrors — single source of truth is .ai/; these are REGENERATED
 # from it by `sh scripts/sync-ai-docs.sh` (run automatically by `sh scripts/install.sh`).
