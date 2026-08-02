@@ -53,7 +53,15 @@ Operating rules:
    boundary.** Native sub-agents can be launched with write tools genuinely withheld; a full CLI in a
    pane cannot. Therefore: never run a pane agent against a dirty tree you cannot reconstruct, always
    `git status` before and after, and prefer native read-only sub-agents whenever the review does not
-   specifically need cross-model diversity. Structural enforcement (a separate git worktree, or a
+   specifically need cross-model diversity.
+
+   **Binding rule, added after a second recurrence.** A pane agent that is not a native
+   write-withheld sub-agent MUST run in its own `git worktree`. The compensating controls this ADR
+   first substituted — "`git status` before and after", "never run against a dirty tree you cannot
+   reconstruct" — measurably failed: the tree was dirty with 46 files throughout, and during the
+   security seat's audit **the review target itself mutated mid-review**, so every finding had to be
+   re-verified against a commit. `git worktree list` already shows several provisioned worktrees, so
+   the cost is near zero. Structural enforcement (a separate git worktree, or a
    read-only bind mount) is the only real fix; it is recorded as a Phase-1 item in
    `.ai/specs/98-nice-to-haves.md`.
 4. **Truncated output has a defined fallback:** ask the affected reviewer to write its complete

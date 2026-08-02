@@ -5,8 +5,8 @@
 import assert from "node:assert/strict";
 import {
 	computeCriticalPath,
+	globMatch,
 	globsOverlap,
-	globToRegExp,
 	matchesAny,
 	parseCliArgs,
 	parsePorcelainZ,
@@ -78,17 +78,15 @@ const warns = (g) => validateGraph(g, { checkSpecSource: false }).warnings;
 
 console.log("glob matching");
 test("* does not cross a slash", () => {
-	assert.ok(globToRegExp(".ai/commands/*.md").test(".ai/commands/build.md"));
-	assert.ok(
-		!globToRegExp(".ai/commands/*.md").test(".ai/commands/sub/build.md"),
-	);
+	assert.ok(globMatch(".ai/commands/*.md", ".ai/commands/build.md"));
+	assert.ok(!globMatch(".ai/commands/*.md", ".ai/commands/sub/build.md"));
 });
 test("** crosses slashes", () => {
-	assert.ok(globToRegExp("src/**").test("src/a/b/c.ts"));
-	assert.ok(globToRegExp(".ai/**/SKILL.md").test(".ai/skills/x/SKILL.md"));
+	assert.ok(globMatch("src/**", "src/a/b/c.ts"));
+	assert.ok(globMatch(".ai/**/SKILL.md", ".ai/skills/x/SKILL.md"));
 });
 test("dots are literal, not wildcards", () => {
-	assert.ok(!globToRegExp(".ai/x.md").test("Xai/xYmd"));
+	assert.ok(!globMatch(".ai/x.md", "Xai/xYmd"));
 });
 test("matchesAny", () => {
 	assert.ok(matchesAny("src/a.ts", ["docs/**", "src/**"]));
@@ -537,14 +535,59 @@ test("--node scopes unexplained scope to that node's write_set", () => {
 	]);
 });
 
-console.log("consensus-review fixes — ReDoS");
-test("runs of **/ collapse so a long non-match cannot blow up", () => {
-	const glob = `${"**/".repeat(12)}x`;
-	const path = `${"a/".repeat(24)}y`;
+console.log(
+	"ReDoS — the shape that actually blew up (31s PoC), not the one the old fix handled",
+);
+test("non-consecutive ** separated by a literal stays fast", () => {
+	// The earlier mitigation collapsed CONSECUTIVE `**/` runs, and the earlier test used exactly
+	// that shape — so it passed while `a**/a**/…` still took 31 seconds. This is the real shape.
+	const glob = `${"a**/".repeat(4)}z`;
+	const path = `${"a/".repeat(800)}q`;
 	const t0 = Date.now();
-	globToRegExp(glob).test(path);
+	assert.equal(globMatch(glob, path), false);
 	const ms = Date.now() - t0;
-	assert.ok(ms < 500, `took ${ms}ms — backtracking not collapsed`);
+	assert.ok(ms < 250, `took ${ms}ms — backtracking still reachable`);
+});
+test("many single-star segments stay fast (the classic ReDoS shape)", () => {
+	// Matches (every `a` in the pattern finds an `a`); the point is that it returns FAST.
+	// A compiled RegExp `^[^/]*a[^/]*a…$` is where this shape historically explodes.
+	const t0 = Date.now();
+	assert.equal(globMatch(`${"*a".repeat(20)}*`, "a".repeat(2000)), true);
+	assert.ok(Date.now() - t0 < 250, `took ${Date.now() - t0}ms`);
+	// The non-matching variant is the expensive one for a backtracking engine.
+	const t1 = Date.now();
+	assert.equal(globMatch(`${"*a".repeat(20)}*z`, "a".repeat(2000)), false);
+	assert.ok(Date.now() - t1 < 250, `took ${Date.now() - t1}ms`);
+});
+test("deep **/ runs stay fast", () => {
+	const t0 = Date.now();
+	globMatch(`${"**/".repeat(12)}x`, `${"a/".repeat(24)}y`);
+	assert.ok(Date.now() - t0 < 250);
+});
+test("glob semantics survive the rewrite", () => {
+	assert.ok(globMatch("a/**/b", "a/b")); // ** matches zero segments
+	assert.ok(globMatch("a/**/b", "a/x/y/b"));
+	assert.ok(globMatch("docs/adr/*.md", "docs/adr/0001-x.md"));
+	assert.ok(!globMatch("docs/adr/*.md", "docs/adr/sub/0001-x.md"));
+	assert.ok(globMatch("?.md", "a.md"));
+	assert.ok(!globMatch("?.md", "ab.md"));
+});
+test("an over-long glob is rejected", () => {
+	const g = graph([node({ write_set: [`x/${"a/".repeat(200)}b`] })]);
+	assert.ok(errs(g).some((e) => e.includes("longer than")));
+});
+test("a node id containing terminal escapes is sanitized in output", () => {
+	const g = graph([node({ id: "T.\u001b[31mN1", status: "DONE" })]);
+	assert.ok(
+		!errs(g).some((e) => e.includes("\u001b")),
+		"escape reached the message",
+	);
+});
+test("a graph over the node cap is rejected rather than OOMing", () => {
+	const many = Array.from({ length: 2001 }, (_, i) =>
+		node({ id: `T.N${i}`, write_set: [`f${i}.md`] }),
+	);
+	assert.ok(errs(graph(many)).some((e) => e.includes("node cap")));
 });
 
 console.log("security audit fixes (codex seat)");

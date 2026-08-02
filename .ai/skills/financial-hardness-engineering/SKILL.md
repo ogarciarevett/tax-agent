@@ -62,9 +62,18 @@ have never seen fail is a gate you are trusting on faith.
 > post-commit exit status anyway. With no CI, **nothing could ever fail on tests.** The claim had
 > been in the contract for months. The fix was a ten-line pre-commit hook.
 
-### 3. Make evidence unfakeable by construction
+### 3. Make evidence *required and structured* — and know what that does NOT buy you
 Prefer gates that produce output only when actually run: a non-zero exit code, a test count, a diff.
 Prefer machine checks over prose review for anything mechanically checkable.
+
+**Be precise about the guarantee.** Requiring an `evidence[]` entry with a criterion, a command, and
+an output excerpt is *structural* — a tool can reject its absence, and this repo's validator does.
+It is **not** verification: nothing re-executes the command or diffs the recorded output against a
+fresh run, so plausible text passes. Every node in this repo's own P1 graph rests on that weaker
+guarantee. Say "required and structured", never "unfakeable" — overstating the mechanism is itself
+the *Evidence theater* failure mode listed below. Closing the gap means storing a command plus exit
+code and hash and re-running it in the gate; until that exists, the residual risk is named in the
+review record rather than papered over.
 
 ### 4. Assert the negative for every boundary
 For tenancy, authorization, and validation: test that the forbidden thing is **refused**. A passing

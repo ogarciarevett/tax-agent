@@ -20,6 +20,9 @@ Per `.ai/context.md` → "Consensus review":
 
 ## Steps
 
+0. **Freeze the target.** Record the exact SHA (or stash-and-commit first). **Do not edit the files
+   under review while the panel runs.** A panel that reviewed a moving tree cannot honestly report
+   consensus — this happened during P1 and every finding had to be re-verified against a commit.
 1. 🔵 **Blue (frame).** State what is under review and the pass/fail criteria. Gather ground truth:
    the diff, the relevant `.ai/specs/` sections, the task graph, and the actual source files.
    Brief every reviewer with **verified context — never guesses**.

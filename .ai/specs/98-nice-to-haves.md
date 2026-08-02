@@ -43,6 +43,26 @@ would produce aspirational documentation nobody follows.
 - **`validateGraph` is ~190 lines**, over the repo's own >50-line review bar even after being split
   into `validateHeader` / `validateNode` / `findCycles`. Cost: S.
 
+### Second security seat — deferred with reason (Phase 1)
+- **M1 — the pre-commit hook executes repository content.** `20-test.sh` runs `pnpm test` (vitest over
+  `src/**/*.test.ts`) and the validator self-test; its siblings only *analyze*. Any branch or
+  `git pull` that lands a test file gets code execution at the human's next commit. Defensible, but
+  it is a threat-model change ADR 0001 does not record. Add the note; move the suite to CI. Cost: S.
+- **M2 — `verification_commands` is untrusted data the pipeline tells an agent to execute.** The
+  validator checks only non-emptiness, so a `✓`-valid graph carries commands the validator appears
+  to have blessed. Document that a task graph is executable content and must be reviewed as such. Cost: S.
+- **M3 — coverage threshold is a global average.** `vitest.config.ts` has no `perFile: true`, so a
+  new money module at 0% cannot break the gate. **Enabling it fails today** (`ingest-repo.ts` is at
+  75% branches), so it needs tests first or a targeted per-module threshold. Cost: M.
+- **M5 — no secret scanner.** "no secrets or PII in logs" and "NEVER commit .env or any secret" are
+  enforced by one unit test over one sink; `.gitignore` matches filenames only, so a key pasted into
+  a `.ts` or `.md` commits with no friction. Add `gitleaks`/`secretlint` to `pre-commit.d/`. Cost: S.
+- **M6 — two "mandatory" consensus personas do not exist** (`financial-domain-reviewer`,
+  `ledger-invariant-reviewer`). Intended (they need a ledger), but `.ai/context.md` should say so
+  inline where it names them. Cost: S.
+- **L4 — `spec_source` symlink.** Absolute paths and `..` are rejected, but a repo-relative symlink
+  still reads out-of-tree. Content is only mined for integers, so impact is negligible. Cost: S.
+
 ### Security findings deferred with reason (Phase 1)
 - **M2 — no size/cardinality limits on graph or spec files.** A huge or dense JSON graph could
   exhaust heap/CPU during the every-commit hook. Not fixed: the graphs are repo-local and

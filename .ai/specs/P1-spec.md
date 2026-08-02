@@ -78,6 +78,9 @@ actual project.
       **This is containment, not prevention** — `git add -f` still stages an ignored file, and PII
       under an unlisted name is unaffected. A fail-closed staged-content gate is deferred
       (`98-nice-to-haves.md`).
+- [ ] 17. **(Amendment A3)** The lint and typecheck pre-commit hooks fail closed on a missing
+      toolchain, like the test gate: `grep -c 'exit 1' .githooks/pre-commit.d/10-biome.sh
+      .githooks/pre-commit.d/30-typecheck.sh` is non-zero for both.
 - [ ] 16. **(Amendment A2)** `pnpm test` stays green with the validator's standalone `.mjs` self-test
       present — vitest discovery is scoped to `src/` and the self-test runs via `pnpm test:graph`.
 
@@ -90,6 +93,7 @@ surfaced mid-task by the pipeline's own gates and are pending the human's ratifi
 | # | Amendment | Why | Raised by | Status |
 |---|-----------|-----|-----------|--------|
 | **A1** | `.gitignore` added to P1.N13's write set; criterion **AC15** added | `tmp/pdfs/` held 10 Spanish income-tax payment files (`renta-pago*.png/.txt`, dated 2026-07-22) **untracked and unignored** — one `git add -A` from being committed, in violation of the hard rule that PII never enters git. Files were ignored, **not deleted**. | `node scripts/validate-task-graph.mjs --reconcile` (after the `-uall` fix) | ⚠️ **awaiting human ratification** |
+| **A3** | `.githooks/pre-commit.d/{10-biome,30-typecheck}.sh` added to P1.N10's write set; criterion **AC17** added | Both soft-skipped on a missing `pnpm` (`\|\| exit 0`), so the DoD's "linter clean" and "typecheck clean" passed silently — the same advisory-gate defect `20-test.sh` was created to fix. | second `security-auditor` seat (M4) | ⚠️ **awaiting human ratification** |
 | **A2** | `vitest.config.ts` added to P1.N9's write set; criterion **AC16** added | Adding `scripts/validate-task-graph.test.mjs` broke `pnpm test`: vitest's default discovery matched it and failed on its top-level `process.exit`. `vitest.config.ts` set only `coverage.include`, never `test.include`. | `pnpm test` failing | ⚠️ **awaiting human ratification** |
 
 Neither amendment changes the pipeline's behavior; both are containment fixes forced by defects the

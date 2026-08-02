@@ -501,7 +501,7 @@
 		},
 		{
 			"id": "P1.N10",
-			"title": "Add the blocking pre-commit test gate and the graph npm scripts",
+			"title": "Add the blocking pre-commit test gate, make the sibling hooks fail closed, add the graph npm scripts",
 			"kind": "script",
 			"status": "VERIFIED",
 			"depends_on": [],
@@ -510,20 +510,28 @@
 				".githooks/post-commit.d/**",
 				"package.json"
 			],
-			"write_set": [".githooks/pre-commit.d/20-test.sh", "package.json"],
+			"write_set": [
+				".githooks/pre-commit.d/10-biome.sh",
+				".githooks/pre-commit.d/20-test.sh",
+				".githooks/pre-commit.d/30-typecheck.sh",
+				"package.json"
+			],
 			"inputs": [],
 			"outputs": [".githooks/pre-commit.d/20-test.sh"],
 			"invariants": [
 				"the gate blocks on test failure rather than reporting",
 				"it self-skips before the app is scaffolded, matching the sibling hooks",
-				"no dependency is added to package.json"
+				"no dependency is added to package.json",
+				"no pre-commit gate the Definition of Done names can pass silently"
 			],
 			"acceptance_criteria": [
-				"AC12 a blocking pre-commit test gate exists and is syntactically valid"
+				"AC12 a blocking pre-commit test gate exists and is syntactically valid",
+				"AC17 the lint and typecheck hooks fail closed on a missing toolchain (Amendment A3)"
 			],
 			"verification_commands": [
 				"sh -n .githooks/pre-commit.d/20-test.sh",
-				"test -x .githooks/pre-commit.d/20-test.sh"
+				"test -x .githooks/pre-commit.d/20-test.sh",
+				"grep -c 'exit 1' .githooks/pre-commit.d/10-biome.sh .githooks/pre-commit.d/30-typecheck.sh"
 			],
 			"risk": "medium",
 			"financially_material": false,
@@ -542,6 +550,11 @@
 					"criterion": "AC12",
 					"command": "sed -i '' 's/branches: 80/branches: 99/' vitest.config.ts && pnpm test",
 					"output_excerpt": "ERROR: Coverage for branches (90.03%) does not meet global threshold (99%) - PROVES the gate can actually fail, then reverted. Before this node, tests ran only post-commit where the failure was swallowed by `|| echo` + `exit 0`, with no CI."
+				},
+				{
+					"criterion": "AC17",
+					"command": "grep -n 'command -v pnpm' .githooks/pre-commit.d/*.sh",
+					"output_excerpt": "all three hooks now use `if ! command -v pnpm ...; then ... exit 1; fi`. Previously 10-biome.sh:7 and 30-typecheck.sh:6 were `|| exit 0`, so on a machine without pnpm the DoD's 'linter clean' and 'typecheck clean' passed silently - the same advisory-gate defect 20-test.sh was created to fix."
 				}
 			]
 		},

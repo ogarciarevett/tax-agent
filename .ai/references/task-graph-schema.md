@@ -88,8 +88,10 @@ links to neither is unexplained work — it exists without a reason traceable to
 An `acceptance_criteria` entry cites a **numbered criterion that exists in `spec_source`** (`"AC7 …"`).
 If the evidence proves a node invariant rather than a spec criterion, tag it
 `"invariant: <the invariant>"` instead of borrowing an unrelated AC number — a mis-tagged criterion
-breaks the requirement→evidence link while still looking complete. **The validator cannot catch
-this**; it does not resolve criterion ids across files. It is a mandatory reviewer check.
+breaks the requirement→evidence link while still looking complete. **The validator enforces this**:
+every `AC<n>` cited by a node must resolve to a numbered criterion in `spec_source`, or validation
+fails. (It did not, once — a graph cited an `AC15` its spec never defined, and only a human reviewer
+caught it. That is why the check exists.)
 
 **`graph_delta.edges_added` shorthand.** Edges may be written `"N1->N2"` (the `<task-id>.` prefix is
 implied) and `"*->N16"` where `*` means *every other node in this file*. The shorthand is a summary
@@ -140,6 +142,17 @@ Run `node scripts/validate-task-graph.mjs <file>`; non-zero exit on any violatio
 | *(default)* | `schema_version` present · `spec_source` exists on disk · node ids unique and well-formed · every `depends_on` resolves · **no cycles** · every node links ≥1 acceptance criterion or invariant · every node has ≥1 verification command · `compensation` non-empty iff `side_effects` non-empty · no `VERIFIED` node with empty `evidence` · `parallel_safe` is `null` in source · `critical_path` entries resolve |
 | `--ready` | prints the `READY` set per the readiness rule, plus the computed critical path |
 | `--reconcile` | compares changed files against the union of `write_set`s; reports files changed outside any write set (unexplained scope) and declared writes never touched |
+
+## Limits
+
+| Limit | Value | Why |
+|---|---|---|
+| nodes per graph | 2000 | a large linear chain exhausts the heap in the transitive closure — on the pre-commit path |
+| wildcards per glob | 8 | bounds pathological patterns |
+| glob length | 256 chars | **the one that mattered**: capping wildcards alone still allowed a 31-second validation that printed success, because the long side of a comparison had zero wildcards |
+
+Glob matching is segment-wise and linear (`globMatch`), not regex-compiled, so these are
+belt-and-braces rather than the primary defence.
 
 ## Deliberate non-goals
 

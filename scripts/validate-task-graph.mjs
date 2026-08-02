@@ -55,43 +55,70 @@ const KINDS = new Set([
 
 // ---------------------------------------------------------------- glob helpers
 
-const reCache = new Map();
-
-/** Convert a write_set/read_set glob to a RegExp. `**` crosses `/`, `*` and `?` do not. */
-export function globToRegExp(glob) {
-	const hit = reCache.get(glob);
-	if (hit) return hit;
-	// Collapse runs of `**/` before compiling: `**/**/**/x` is equivalent to `**/x` but compiles to
-	// nested `(?:.*/)?` groups whose backtracking is catastrophic on a long non-matching path.
-	const g = glob.replace(/(?:\*\*\/)+/g, "**/");
-	let re = "";
-	for (let i = 0; i < g.length; i++) {
-		const c = g[i];
-		if (c === "*") {
-			if (g[i + 1] === "*") {
-				i++;
-				if (g[i + 1] === "/") {
-					i++;
-					re += "(?:.*/)?"; // `a/**/b` also matches `a/b`
-				} else {
-					re += ".*";
-				}
-			} else {
-				re += "[^/]*";
-			}
-		} else if (c === "?") {
-			re += "[^/]";
+/**
+ * Match one path SEGMENT (no `/`) against a pattern containing `*` and `?`.
+ * Two-pointer greedy with a single backtrack point — linear-ish and, crucially, free of the
+ * catastrophic backtracking a compiled RegExp exhibits on patterns like `a*a*a*a*`.
+ */
+function matchSegment(pat, str) {
+	let p = 0;
+	let i = 0;
+	let star = -1;
+	let mark = 0;
+	while (i < str.length) {
+		if (p < pat.length && (pat[p] === "?" || pat[p] === str[i])) {
+			p++;
+			i++;
+		} else if (p < pat.length && pat[p] === "*") {
+			star = p++;
+			mark = i;
+		} else if (star !== -1) {
+			p = star + 1;
+			i = ++mark;
 		} else {
-			re += c.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+			return false;
 		}
 	}
-	const compiled = new RegExp(`^${re}$`);
-	reCache.set(glob, compiled);
-	return compiled;
+	while (p < pat.length && pat[p] === "*") p++;
+	return p === pat.length;
+}
+
+/**
+ * Glob match. A whole `**` segment matches zero or more path segments; `*` and `?` never cross `/`.
+ *
+ * Deliberately NOT regex-based. The previous implementation compiled globs to a RegExp and tried to
+ * defuse backtracking by collapsing consecutive `**\/` runs — which a single literal between them
+ * defeats. A reviewer demonstrated `a**\/a**\/a**\/a**\/z` against an 800-segment path taking
+ * **31 seconds** while the validator printed success, on a check that runs in the pre-commit hook.
+ * Segment-wise matching removes the class rather than raising its cost.
+ */
+export function globMatch(glob, path) {
+	const g = glob.split("/");
+	const s = path.split("/");
+	let gi = 0;
+	let si = 0;
+	let starGi = -1;
+	let starSi = 0;
+	while (si < s.length) {
+		if (gi < g.length && g[gi] === "**") {
+			starGi = gi++;
+			starSi = si;
+		} else if (gi < g.length && matchSegment(g[gi], s[si])) {
+			gi++;
+			si++;
+		} else if (starGi !== -1) {
+			gi = starGi + 1;
+			si = ++starSi;
+		} else {
+			return false;
+		}
+	}
+	while (gi < g.length && g[gi] === "**") gi++;
+	return gi === g.length;
 }
 
 export function matchesAny(path, globs) {
-	return globs.some((g) => globToRegExp(g).test(path));
+	return globs.some((g) => globMatch(g, path));
 }
 
 /** Literal portion of a glob before its first wildcard. */
@@ -110,8 +137,8 @@ export function globsOverlap(a, b) {
 	const aWild = /[*?]/.test(a);
 	const bWild = /[*?]/.test(b);
 	if (!aWild && !bWild) return false;
-	if (!aWild) return globToRegExp(b).test(a);
-	if (!bWild) return globToRegExp(a).test(b);
+	if (!aWild) return globMatch(b, a);
+	if (!bWild) return globMatch(a, b);
 	const pa = literalPrefix(a);
 	const pb = literalPrefix(b);
 	return pa.startsWith(pb) || pb.startsWith(pa);
@@ -140,6 +167,11 @@ export function readSpecCriteria(specPath) {
 }
 
 // ---------------------------------------------------------------- validation
+
+/** Strip control characters so a crafted node id or glob cannot emit terminal escapes. */
+// Uses \p{Cc} (Unicode "Control") rather than a literal control-character range, which Biome's
+// noControlCharactersInRegex rejects - it blocked this very commit.
+const safe = (v) => String(v).replace(/\p{Cc}/gu, "?");
 
 const isArray = (v) => Array.isArray(v);
 const isNonEmptyArray = (v) => Array.isArray(v) && v.length > 0;
@@ -171,6 +203,8 @@ const STRING_ARRAY_FIELDS = [
 	"compensation",
 ];
 const MAX_GLOB_WILDCARDS = 8;
+const MAX_GLOB_LENGTH = 256;
+const MAX_NODES = 2000;
 
 function validateHeader(graph, { spec, checkSpecSource }, err) {
 	if (graph.schema_version !== "1.0") {
@@ -208,7 +242,7 @@ function validateHeader(graph, { spec, checkSpecSource }, err) {
 }
 
 function validateNode(n, { byId, specCriteria, spec }, err) {
-	const at = `node ${n.id}`;
+	const at = `node ${safe(n.id)}`;
 
 	if (!n.title) err(`${at}: title is required`);
 	if (!NODE_STATES.has(n.status))
@@ -283,16 +317,21 @@ function validateNode(n, { byId, specCriteria, spec }, err) {
 		err(`${at}: needs at least one verification_command`);
 	}
 
-	// Bound glob complexity: repeated `*a` segments still produce overlapping quantifiers whose
-	// backtracking grows steeply (measured ~1.8s at 10 segments). Reject rather than compile.
+	// Bound glob complexity. Matching is now linear (see globMatch), so these are belt-and-braces
+	// against pathological input rather than the primary defence — the primary defence was the
+	// mistake: capping wildcards while leaving glob LENGTH unbounded still allowed a 31-second
+	// validation that printed success, because the long side of the comparison had zero wildcards.
 	for (const key of ["read_set", "write_set"]) {
 		for (const g of n[key]) {
-			if (
-				typeof g === "string" &&
-				(g.match(/[*?]/g) ?? []).length > MAX_GLOB_WILDCARDS
-			) {
+			if (typeof g !== "string") continue;
+			if ((g.match(/[*?]/g) ?? []).length > MAX_GLOB_WILDCARDS) {
 				err(
-					`${at}: ${key} glob has more than ${MAX_GLOB_WILDCARDS} wildcards: ${g}`,
+					`${at}: ${key} glob has more than ${MAX_GLOB_WILDCARDS} wildcards: ${safe(g)}`,
+				);
+			}
+			if (g.length > MAX_GLOB_LENGTH) {
+				err(
+					`${at}: ${key} glob is longer than ${MAX_GLOB_LENGTH} chars (${g.length})`,
 				);
 			}
 		}
@@ -403,6 +442,17 @@ export function validateGraph(
 	if (!isArray(graph.nodes))
 		return { errors: [...errors, "nodes must be an array"], warnings };
 	if (graph.nodes.length === 0) err("nodes must not be empty");
+	if (graph.nodes.length > MAX_NODES) {
+		// Without a cap, a large linear chain exhausts the heap in transitiveClosure (a 60k-node
+		// chain aborts with exit 134) — on the pre-commit path.
+		return {
+			errors: [
+				...errors,
+				`nodes: ${graph.nodes.length} exceeds the ${MAX_NODES}-node cap`,
+			],
+			warnings,
+		};
+	}
 
 	const byId = new Map();
 	for (const n of graph.nodes) {
@@ -598,7 +648,7 @@ export function reconcile(graph, changed, nodeId = null) {
 	const declared = [...new Set(scope.flatMap((n) => n.write_set ?? []))];
 	const unexplained = changed.filter((f) => !matchesAny(f, declared));
 	const untouched = declared.filter(
-		(g) => !changed.some((f) => globToRegExp(g).test(f)),
+		(g) => !changed.some((f) => globMatch(g, f)),
 	);
 	return { unexplained, untouched, declared, changed };
 }

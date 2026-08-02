@@ -92,6 +92,35 @@ recording; `/reconcile` not run by automation; `validateGraph` still ~190 lines.
 **Pending human ratification:** amendments **A1** (`.gitignore`, PII containment) and **A2**
 (`vitest.config.ts`, test-discovery scope). An agent may not approve its own scope change.
 
+### Post-commit finding — a fifth seat, and a correction
+
+A second `security-auditor` (native sub-agent) returned **after** commit `4ec2791` and found that
+**the ReDoS fix in this very review was wrong, and its regression test gave false assurance**:
+
+- The `**/` collapse only rewrote *consecutive* runs. `a**/a**/a**/a**/z` (8 wildcards, at the cap)
+  against an 1601-char zero-wildcard glob took **31.2 seconds while printing `✓` and exiting 0** —
+  on the every-commit path. The test I wrote used `("**/").repeat(12)`, the one shape the collapse
+  already handled.
+- **Fixed properly:** glob matching is now segment-wise and linear (`globMatch`), not regex-compiled,
+  so the class is removed rather than made more expensive. Plus a 256-char glob cap and a 2000-node
+  cap. The PoC now runs in **0.024s and exits 1**. The test now uses the non-consecutive shape.
+- Also fixed: `financial-hardness-engineering` said evidence was "unfakeable by construction" — it is
+  *required and structured*, not verified (nothing re-runs the command). Reworded, with the residual
+  risk named. `10-biome.sh` and `30-typecheck.sh` now fail closed on a missing toolchain like
+  `20-test.sh` already did. Node ids and globs are sanitized before echoing (terminal-escape
+  injection). Caps documented in the schema reference.
+
+**This seat's process finding is upheld and is the most important one:** the files mutated
+mid-review, so the panel did not review a frozen commit. **A consensus panel that does not review a
+frozen SHA cannot honestly report consensus.** Future `/consensus-review` runs must pin a commit
+first. Recorded as a binding change to the command.
+
+Still open from that seat, deferred with reason in `98-nice-to-haves.md`: M1 (hook executes repo
+content at commit time — threat-model note for ADR 0001), M2 (`verification_commands` is
+executable data), M3 (coverage threshold is a global average, `perFile: true` would fail today on
+pre-existing files), M5 (no secret scanner), M6 (two consensus personas named but not authored),
+L1/L4 residuals.
+
 ### Process findings - recorded in ADR 0003
 
 The `codex` reviewer, given an explicit and repeated **READ-ONLY** instruction, nonetheless edited
