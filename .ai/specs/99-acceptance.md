@@ -86,10 +86,28 @@ unlisted name is unaffected. The claim is containment; a fail-closed staged-cont
 | **Resume** — a fresh clone can continue from the committed graph alone | `git clone` to a scratch dir, then `node scripts/validate-task-graph.mjs --ready .ai/specs/task-graphs/P1.json` → `✓ 16 nodes… critical path… READY (0)`, exit 0; `node scripts/validate-task-graph.test.mjs` → `74 passed, 0 failed`, **with no `node_modules` and no `pnpm install`**. The loop reviewer correctly called this false before the commit; it is true after it. | ✅ |
 | **Generated-contract sync** | 3 syncs, byte-identical, `git diff --exit-code` 0 | ✅ |
 
+| AC17 | lint/typecheck hooks fail closed on a missing toolchain (Amendment A3) | ✅ | `grep -n 'command -v pnpm' .githooks/pre-commit.d/*.sh` → all three now `if ! … exit 1`; previously `10-biome.sh:7` and `30-typecheck.sh:6` were `\|\| exit 0` |
+
+## Correction — a fifth reviewer overturned a claim made above
+
+A second `security-auditor` returned **after** commits `79dacdd`/`4ec2791` and proved that the
+ReDoS mitigation recorded in this review **did not work**, and that its regression test tested the
+wrong shape. `a**/a**/a**/a**/z` against a 1601-char zero-wildcard glob: **31.2 s, exit 0, `✓`
+printed** — on the every-commit path.
+
+Fixed in `6d08aa4`: glob matching is now segment-wise and linear (`globMatch`), not regex-compiled.
+Same PoC: **0.024 s, exit 1**. Self-test 74 → 80. The earlier row claiming this was handled was
+wrong and is corrected here rather than quietly edited away.
+
 ## Honest Implementation Metric
 
-**15 ✅ + 1 ⚠️ of 16 criteria = 93.75% verified.**
+**16 ✅ + 1 ⚠️ of 17 criteria = 94.1% verified.**
 Not rounded up. AC15 is ⚠️ because the honest claim is weaker than the original wording.
+
+**Three consecutive rounds in which the pipeline's own gates caught its author:**
+`/reconcile` found undeclared `vitest.config.ts`, then the PII in `tmp/pdfs/`, then the two hook
+files edited outside any write set; the pre-commit gate then **blocked this very commit** over a
+control-character regex. That is the strongest evidence available that these gates are real.
 
 ## Unverified
 
