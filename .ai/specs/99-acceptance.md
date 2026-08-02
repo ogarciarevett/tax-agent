@@ -83,6 +83,7 @@ unlisted name is unaffected. The claim is containment; a fail-closed staged-cont
 | **Security boundary** | codex audit: no Critical; H1/H2/M1/M3/M4/M6 fixed; gitleaks clean over tracked diff + 20 untracked files; `execFileSync` no shell; `--base` argv injection blocked (live probe created no file) | ✅ |
 | **Tenancy boundary** | n/a — P1 touches no tenant-scoped data. Stated in `P1-spec.md`, not assumed | ✅ |
 | **Documentation** | README rewritten (H1 was `# cross-ai-template`); 4 ADRs; 3 references | ✅ |
+| **Resume** — a fresh clone can continue from the committed graph alone | `git clone` to a scratch dir, then `node scripts/validate-task-graph.mjs --ready .ai/specs/task-graphs/P1.json` → `✓ 16 nodes… critical path… READY (0)`, exit 0; `node scripts/validate-task-graph.test.mjs` → `74 passed, 0 failed`, **with no `node_modules` and no `pnpm install`**. The loop reviewer correctly called this false before the commit; it is true after it. | ✅ |
 | **Generated-contract sync** | 3 syncs, byte-identical, `git diff --exit-code` 0 | ✅ |
 
 ## Honest Implementation Metric
@@ -92,10 +93,7 @@ Not rounded up. AC15 is ⚠️ because the honest claim is weaker than the origi
 
 ## Unverified
 
-- **The resume claim.** `.ai/references/loop-state-machines.md` says a fresh clone can resume from
-  the committed graph. Until this commit lands, the files were untracked, so it was *false at the
-  time the loop reviewer checked it*. After this commit it should hold, but **it has not been tested
-  by an actual fresh `git clone`** — that is the only honest test and it was not run.
+- *(resolved — moved to the matrix below)* ~~The resume claim.~~
 - **Herdr recipes for client 0.7.1** are recorded in `.ai/memory.md` from one working session; they
   were not re-tested after the pane was closed.
 - **`readSpecCriteria` parsing** is validated against `P1-spec.md`'s shape only. A spec using a
