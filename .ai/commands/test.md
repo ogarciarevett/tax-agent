@@ -29,6 +29,9 @@ becomes testable once several verified nodes sit together. Do not re-run the nod
 8. **The coverage gate** — `pnpm test` (>= 80%, enforced pre-commit by
    `.githooks/pre-commit.d/20-test.sh`).
 
+**Then run `/eval`.** `/test` proves the code; `/eval` proves the feature across UI, backend log,
+DB and output. A slice is not integrated until both pass.
+
 For bug fixes anywhere, use the **Prove-It pattern**: write a test that reproduces the bug, confirm
 it FAILS, implement the fix, confirm it PASSES, then run the full suite for regressions.
 

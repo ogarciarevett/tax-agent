@@ -40,6 +40,9 @@ Otherwise → copy `.ai/specs/_task-spec.template.md` to `.ai/specs/<id>-spec.md
 - **Graph delta** — the nodes and edges this task intends to add, modify, or remove.
 - **Affected loops** — which state transitions change behavior.
 - **Blast radius** — from `/map`, with `file:line` citations.
+- **Eval row** — the feature's entry for `EVALS.md`: input, output, expected, and how each of the
+  four surfaces (UI / backend log / DB / output) will be checked or why it is `n/a`. **A feature
+  with no eval row is not specified.**
 - **Risks & assumptions**, and **open decisions** that genuinely need a human.
 
 If the task is already fully covered by the approved `.ai/specs/01-spec.md`, cite that section

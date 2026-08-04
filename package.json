@@ -14,7 +14,8 @@
 		"test": "vitest run --coverage",
 		"test:watch": "vitest",
 		"test:graph": "node scripts/validate-task-graph.test.mjs",
-		"graph:validate": "node scripts/validate-task-graph.mjs .ai/specs/task-graphs/*.json"
+		"graph:validate": "node scripts/validate-task-graph.mjs .ai/specs/task-graphs/*.json",
+		"eval": "node scripts/run-evals.mjs"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.2",

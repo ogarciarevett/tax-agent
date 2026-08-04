@@ -46,6 +46,8 @@
   ONLY when the repo has no external backlog — see "Task identity & spec source" below. Each task's
   COMPILED EXECUTION GRAPH lives at `.ai/specs/task-graphs/<id>.json` and is validated by
   `node scripts/validate-task-graph.mjs`.
+- Repo-root files: `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` are GENERATED; `README.md` and
+  `EVALS.md` are HAND-EDITED (human-facing catalogues, not part of the sync).
 - Memory (`.ai/memory.md`) is LOCAL and gitignored — see the Memory protocol below.
 - To change a convention: edit `.ai/context.md` / `.ai/pipeline.md`, run
   `sh scripts/sync-ai-docs.sh`, and reflect it in `.ai/specs/01-spec.md`. At the end of every `/build`
@@ -158,7 +160,8 @@ historical context and must **never** be the authoritative source of current fin
 14. No tax estimate represented as professional tax advice.
 
 ## Definition of Done (all must pass)
-Tests green + coverage ≥ 80% **over `src/**`** (`pnpm test`; repo machinery under `scripts/` has
+Runnable feature evals green (`pnpm eval` — every feature accounts for UI, backend log, DB and
+output; see `EVALS.md`) · Tests green + coverage ≥ 80% **over `src/**`** (`pnpm test`; repo machinery under `scripts/` has
 its own runner, `pnpm test:graph`, and does not contribute to that number) · typecheck clean
 (`pnpm exec tsc --noEmit`) · linter/formatter clean (`pnpm exec biome check`) · task graph valid
 (`node scripts/validate-task-graph.mjs .ai/specs/task-graphs/<id>.json`) · every external input

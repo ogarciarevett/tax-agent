@@ -21,14 +21,17 @@ PASTED, not asserted.**
    `| # | Requirement | Behavior | Implementation (file:line) | Test | Evidence | Status |`
 
    Carry the honest status through from each node's report. **Do not upgrade a status here.**
-3. **Add the non-requirement rows** the evidence graph also demands, each with its own evidence:
+3. **Add the eval rows.** One row per `EVALS.md` feature with its four surfaces and their marks,
+   taken from `.ai/specs/95-eval-results.md`. Not-implemented features are listed as ⬜ and are
+   excluded from the metric — never folded in to raise it.
+4. **Add the non-requirement rows** the evidence graph also demands, each with its own evidence:
    invariants · graph delta (planned vs actual, from `/reconcile`) · loop transitions (each node's
    final state) · security boundary · tenancy boundary · documentation · generated-contract
    synchronization.
-4. **Report the aggregate Honest Implementation Metric**: `verified ✅ ÷ total = NN%`.
-5. **List Unverified and Could-not-do** — never omit either, even when empty (say "none").
+5. **Report the aggregate Honest Implementation Metric**: `verified ✅ ÷ total = NN%`.
+6. **List Unverified and Could-not-do** — never omit either, even when empty (say "none").
    Point every gap at `.ai/specs/98-nice-to-haves.md`.
-6. **End with a one-line verdict** (GOAL MET / NOT YET).
+7. **End with a one-line verdict** (GOAL MET / NOT YET).
 
 ## Notes
 

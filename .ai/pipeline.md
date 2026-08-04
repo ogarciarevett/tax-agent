@@ -61,6 +61,14 @@ After all nodes in a slice are verified: integrate node outputs, then run cross-
 tests, migration and persistence checks, authorization isolation checks, graph consistency checks,
 and loop transition checks. Check for new undocumented edges, orphan nodes, and stale assumptions.
 
+### 7b. FEATURE EVALS — `/eval`
+Run the `EVALS.md` catalogue. Every feature is proved across **four surfaces**: UI, backend log,
+DB rows, and returned output. `/test` proves the code works; `/eval` proves the feature is visible
+where a user and an operator look. Every eval **accounts for** all four surfaces — `assert`,
+`n/a: <reason>`, `blocked: <reason>`, or `not-implemented`. A silently omitted surface is a hard
+failure; a fabricated assertion for a surface the feature does not have is worse. Writes
+`.ai/specs/95-eval-results.md`.
+
 ### 8. CONSENSUS REVIEW — `/consensus-review`
 **The only reviewer fan-out stage.** Mandatory reviewer sets and the approval rule are defined in
 `.ai/context.md` → "Consensus review". Not a generic 2-of-3: every mandatory correctness reviewer
@@ -166,7 +174,8 @@ Report row is evidence-backed.
 | `/spec` | the behavioral contract + acceptance criteria + intended graph delta | node decomposition; implementation |
 | `/plan` | compiling the task DAG | writing code; approving its own graph |
 | `/build` | ONE node: RED evidence, minimum implementation, GREEN evidence, node gates, node commit | cross-node/integration testing; reviewer fan-out; selecting >1 node |
-| `/test` | subgraph integration, property/invariant/migration/authz suites, coverage gate | per-node RED/GREEN |
+| `/test` | subgraph integration, property/invariant/migration/authz suites, coverage gate | per-node RED/GREEN; feature-level four-surface proof (`/eval`) |
+| `/eval` | the `EVALS.md` catalogue: UI + log + DB + output per feature | unit-level assertions (that is `/test`) |
 | `/review` | one node or subgraph, six axes | multi-persona fan-out; committing |
 | `/reconcile` | planned vs actual graph impact; unexplained scope | changing the spec; approving drift |
 | `/consensus-review` | **all reviewer fan-out** + synthesis + verdict | committing; simplifying code |

@@ -1,0 +1,225 @@
+{
+	"schema_version": "1.0",
+	"task_id": "P2",
+	"spec_source": ".ai/specs/P2-spec.md",
+	"goal": "Give every feature an eval proving it across UI, backend log, DB rows and returned output, and make running them a pipeline stage.",
+	"bootstrap_exception": false,
+	"graph_delta": {
+		"nodes_added": ["P2.N1", "P2.N2", "P2.N3", "P2.N4"],
+		"nodes_modified": [],
+		"nodes_removed": [],
+		"edges_added": ["N1->N2", "N1->N3", "N2->N4", "N3->N4"],
+		"edges_removed": []
+	},
+	"nodes": [
+		{
+			"id": "P2.N1",
+			"title": "Author EVALS.md: feature table and per-eval four-surface definitions",
+			"kind": "doc",
+			"status": "VERIFIED",
+			"depends_on": [],
+			"read_set": ["src/**", ".ai/specs/00-requirements.md"],
+			"write_set": ["EVALS.md"],
+			"inputs": [".ai/specs/P2-spec.md"],
+			"outputs": ["EVALS.md"],
+			"invariants": [
+				"every eval accounts for all four surfaces",
+				"a surface the feature lacks is n/a with a reason, never a fabricated assertion",
+				"platform features are marked not-implemented and never reported as passing"
+			],
+			"acceptance_criteria": [
+				"AC1 EVALS.md covers 7 Legacy v0 features and 14 specified platform features",
+				"AC2 every eval accounts for all four surfaces"
+			],
+			"verification_commands": [
+				"grep -c '^| \\\\*\\\\*L' EVALS.md",
+				"grep -c '^| \\\\*\\\\*P' EVALS.md"
+			],
+			"risk": "low",
+			"financially_material": false,
+			"side_effects": [],
+			"compensation": [],
+			"parallel_safe": null,
+			"evidence": [
+				{
+					"criterion": "AC1",
+					"command": "grep -c '^| \\*\\*L' EVALS.md && grep -c '^| \\*\\*P' EVALS.md",
+					"output_excerpt": "7 Legacy rows and 14 platform rows in the feature table"
+				},
+				{
+					"criterion": "AC2",
+					"command": "pnpm eval",
+					"output_excerpt": "every row prints UI/LOG/DB/OUT; no MISSING marks"
+				}
+			]
+		},
+		{
+			"id": "P2.N2",
+			"title": "Write the zero-dependency eval runner bound to existing tests and real CLI runs",
+			"kind": "script",
+			"status": "VERIFIED",
+			"depends_on": ["P2.N1"],
+			"read_set": ["EVALS.md", "src/**"],
+			"write_set": ["scripts/run-evals.mjs", "package.json"],
+			"inputs": ["EVALS.md"],
+			"outputs": ["scripts/run-evals.mjs"],
+			"invariants": [
+				"zero runtime dependencies",
+				"a missing surface is a hard failure (MISSING)",
+				"blocked and not-implemented never count as passing and never affect the exit code",
+				"surfaces bind to existing tests rather than reimplementing assertions"
+			],
+			"acceptance_criteria": [
+				"AC3 pnpm eval runs, prints the matrix, exits 0 when asserted surfaces pass",
+				"AC4 blocked and not-implemented never count as passing",
+				"AC5 the runner does not reimplement test logic"
+			],
+			"verification_commands": [
+				"pnpm eval",
+				"grep -c 'src/.*test.ts' scripts/run-evals.mjs"
+			],
+			"risk": "medium",
+			"financially_material": false,
+			"side_effects": [],
+			"compensation": [],
+			"parallel_safe": null,
+			"evidence": [
+				{
+					"criterion": "AC3",
+					"command": "pnpm eval",
+					"output_excerpt": "14/14 asserted surfaces passed - 0 failed - 14 features not implemented (never counted as passing); exit 0"
+				},
+				{
+					"criterion": "AC4",
+					"command": "pnpm eval",
+					"output_excerpt": "L6 reports 3 blocked surfaces and P1-P14 report not-impl; exit stays 0 and none appear in the 14/14 asserted count"
+				},
+				{
+					"criterion": "AC5",
+					"command": "grep -c 'src/.*test.ts' scripts/run-evals.mjs",
+					"output_excerpt": "surfaces reference existing vitest files by path (profile-repo, ingest-repo, verify, render-month-table, es/report, args) plus one real CLI spawn - no assertions duplicated"
+				}
+			]
+		},
+		{
+			"id": "P2.N3",
+			"title": "Add the /eval command and wire stage 7b into the contract, DoD, /spec, /test and /acceptance",
+			"kind": "command",
+			"status": "VERIFIED",
+			"depends_on": ["P2.N1"],
+			"read_set": [".ai/pipeline.md", ".ai/context.md", "EVALS.md"],
+			"write_set": [
+				".ai/commands/eval.md",
+				".ai/commands/spec.md",
+				".ai/commands/test.md",
+				".ai/commands/acceptance.md",
+				".ai/pipeline.md",
+				".ai/context.md"
+			],
+			"inputs": ["EVALS.md"],
+			"outputs": [".ai/commands/eval.md"],
+			"invariants": [
+				"a new feature is not done until it has an eval row",
+				"the Definition of Done requires runnable evals green",
+				"EVALS.md is declared hand-edited, not generated"
+			],
+			"acceptance_criteria": [
+				"AC6 /eval exists as stage 7b and the DoD requires runnable evals green",
+				"AC7 /spec requires an eval row for every new feature"
+			],
+			"verification_commands": [
+				"grep -c '7b. FEATURE EVALS' .ai/pipeline.md",
+				"grep -c 'Eval row' .ai/commands/spec.md",
+				"grep -c 'pnpm eval' .ai/context.md"
+			],
+			"risk": "medium",
+			"financially_material": false,
+			"side_effects": [],
+			"compensation": [],
+			"parallel_safe": null,
+			"evidence": [
+				{
+					"criterion": "AC6",
+					"command": "grep -c '7b. FEATURE EVALS' .ai/pipeline.md && grep -c 'pnpm eval' .ai/context.md",
+					"output_excerpt": "stage 7b present in the lifecycle; the Definition of Done now opens with 'Runnable feature evals green (pnpm eval ...)'"
+				},
+				{
+					"criterion": "AC7",
+					"command": "grep -c 'Eval row' .ai/commands/spec.md",
+					"output_excerpt": "1 - /spec now requires an eval row naming how each of the four surfaces is checked or why it is n/a"
+				}
+			]
+		},
+		{
+			"id": "P2.N4",
+			"title": "Run the evals, record results, sync, reconcile and commit",
+			"kind": "test",
+			"status": "VERIFIED",
+			"depends_on": ["P2.N2", "P2.N3"],
+			"read_set": ["**"],
+			"write_set": [
+				".ai/specs/95-eval-results.md",
+				".ai/specs/02-plan.md",
+				".ai/specs/P2-spec.md",
+				".ai/specs/task-graphs/P2.json",
+				"AGENTS.md",
+				"CLAUDE.md",
+				"GEMINI.md"
+			],
+			"inputs": ["EVALS.md", "scripts/run-evals.mjs"],
+			"outputs": [".ai/specs/95-eval-results.md"],
+			"invariants": [
+				"src/** unchanged - no product code",
+				"the generated contract stays in sync",
+				"nothing is pushed"
+			],
+			"acceptance_criteria": [
+				"AC3 pnpm eval runs and exits 0",
+				"AC8 src/** unchanged"
+			],
+			"verification_commands": [
+				"pnpm eval",
+				"git diff --name-status -- src/",
+				"node scripts/validate-task-graph.mjs --reconcile .ai/specs/task-graphs/P2.json",
+				"sh scripts/sync-ai-docs.sh && git diff --exit-code -- AGENTS.md CLAUDE.md GEMINI.md"
+			],
+			"risk": "medium",
+			"financially_material": false,
+			"side_effects": ["creates local git commits"],
+			"compensation": ["git reset --soft <pre-task-commit>; nothing is pushed"],
+			"parallel_safe": null,
+			"evidence": [
+				{
+					"criterion": "AC3",
+					"command": "pnpm eval",
+					"output_excerpt": "14/14 asserted surfaces passed - 0 failed - 14 features not implemented; exit 0"
+				},
+				{
+					"criterion": "AC8",
+					"command": "git diff --name-status -- src/",
+					"output_excerpt": "(empty) - Legacy v0 untouched"
+				},
+				{
+					"criterion": "invariant: no unexplained scope",
+					"command": "node scripts/validate-task-graph.mjs --reconcile .ai/specs/task-graphs/P2.json",
+					"output_excerpt": "14 changed file(s); no unexplained scope"
+				},
+				{
+					"criterion": "invariant: generated contract in sync",
+					"command": "sh scripts/sync-ai-docs.sh && git diff --exit-code -- AGENTS.md CLAUDE.md GEMINI.md",
+					"output_excerpt": "regenerated; commands 16 (adds /eval), agents 6, skills 31"
+				}
+			]
+		}
+	],
+	"critical_path": ["P2.N1", "P2.N2", "P2.N4"],
+	"global_gates": [
+		"pnpm eval",
+		"pnpm test",
+		"pnpm exec tsc --noEmit",
+		"pnpm exec biome check",
+		"node scripts/validate-task-graph.mjs .ai/specs/task-graphs/P2.json",
+		"sh scripts/sync-ai-docs.sh (twice)"
+	],
+	"open_questions": []
+}

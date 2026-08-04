@@ -27,7 +27,8 @@ Epic letters: **A**, **B** = Legacy CLI v0 (frozen) · **P** = pipeline/platform
 | B5 | `scan` orchestration + cron wiring | [`B5-spec.md`](./B5-spec.md) | — (pre-graph) | ✅ 5/6 AC (48 ingest tests; cron-context AC awaits the user's crontab install) |
 | B6 | Month report renderer + TUI table + `report` cmd | [`B6-spec.md`](./B6-spec.md) | — (pre-graph) | ✅ 4/5 AC (golden renders + real-CLI piped run; TTY q-exit needs a human terminal) |
 | B7 | Epic integration + live E2E + consensus review + acceptance | [`B7-spec.md`](./B7-spec.md) | — (pre-graph) | ✅ 3/3 panel APPROVE · live E2E (2 real bills) · user-side steps in 99-acceptance |
-| **P1** | **Define and self-host the graph-orchestrated loop pipeline** | [`P1-spec.md`](./P1-spec.md) | [`task-graphs/P1.json`](./task-graphs/P1.json) | 🔵 in progress |
+| **P1** | **Define and self-host the graph-orchestrated loop pipeline** | [`P1-spec.md`](./P1-spec.md) | [`task-graphs/P1.json`](./task-graphs/P1.json) | ✅ 16/17 AC ✅ + 1 ⚠️ (94.1%); 4-seat panel, 8 Critical + 3 High fixed |
+| **P2** | **Feature eval catalogue with four-surface proof** | [`P2-spec.md`](./P2-spec.md) | [`task-graphs/P2.json`](./task-graphs/P2.json) | ✅ 8/8 AC ✅; 14/14 asserted surfaces pass, 14 features ⬜ not-implemented |
 
 Status legend: ⬜ todo · 🔵 in progress · ✅ done (impl + passing test, evidence pasted) · 🚫 blocked.
 
