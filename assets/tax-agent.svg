@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="title">
+<title id="title">tax-agent: a receipt with a check mark</title>
+<path d="M57 24h98l29 29v156l-19-12-19 12-19-12-19 12-19-12-19 12-13-9Z" fill="#17283B" stroke="#F3F0E7" stroke-width="8" stroke-linejoin="round"/>
+<path d="M155 24v29h29" fill="#F3F0E7"/>
+<path d="M81 71h43M81 91h69" fill="none" stroke="#F3F0E7" stroke-width="9" stroke-linecap="round"/>
+<circle cx="123" cy="145" r="33" fill="#63D6B0"/>
+<path d="m107 145 11 11 22-24" fill="none" stroke="#17283B" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M39 112h-9m20-24-7-7m147 37h14" fill="none" stroke="#EAB85B" stroke-width="7" stroke-linecap="round"/>
+</svg>
