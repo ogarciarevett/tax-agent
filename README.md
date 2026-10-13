@@ -1,17 +1,14 @@
 <div align="center">
 
+<img src="assets/tax-agent.svg" width="180" alt="tax-agent: a receipt with a check mark">
+
 # tax-agent
 
-**Tax Agent — Financial Intelligence Graph**
+**Local bill tracking and source-backed tax estimates for Spain.**
 
-*A reusable, multi-user financial intelligence platform.
-Deterministic accounting over append-only facts, explained by a graph, evidenced by documents,
-and never asserting a number it cannot trace.*
+[![TypeScript](https://img.shields.io/badge/language-TypeScript-3178C6)](https://www.typescriptlang.org/) [![Node.js 22+](https://img.shields.io/badge/runtime-Node.js_22%2B-43853D)](https://nodejs.org/) [![SQLite](https://img.shields.io/badge/storage-SQLite-4DB6AC)](https://www.sqlite.org/)
 
-![status](https://img.shields.io/badge/status-pipeline_%2F_bootstrap_phase-f59e0b?style=flat-square)
-![platform](https://img.shields.io/badge/platform-not_implemented-64748b?style=flat-square)
-![legacy CLI](https://img.shields.io/badge/legacy_CLI_v0-shipped_%26_frozen-22c55e?style=flat-square)
-![pipeline](https://img.shields.io/badge/pipeline-V2_graph_orchestrated-8b5cf6?style=flat-square)
+Works with **Node.js** · **SQLite** · **Gmail**
 
 </div>
 
