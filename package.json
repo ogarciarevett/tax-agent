@@ -5,7 +5,7 @@
 	"type": "module",
 	"description": "Tax Agent — Financial Intelligence Graph. Pipeline/bootstrap phase; src/ is the frozen Legacy CLI v0 (Spain-only, local-first).",
 	"engines": {
-		"node": ">=22"
+		"node": "^24.22.1"
 	},
 	"scripts": {
 		"dev": "tsx src/index.ts",
@@ -23,7 +23,7 @@
 		"@types/node": "^22.10.0",
 		"@vitest/coverage-v8": "^4.1.9",
 		"tsx": "^4.22.4",
-		"typescript": "^6.0.3",
+		"typescript": "7.0.2",
 		"vitest": "^4.1.9"
 	},
 	"dependencies": {
